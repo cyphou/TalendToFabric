@@ -87,11 +87,11 @@ class TestEndToEndPipeline:
 
     def test_all_fixtures_parsed(self, pipeline_result):
         jobs, *_ = pipeline_result
-        assert len(jobs) == 6
+        assert len(jobs) == 7
 
     def test_inventory_generated(self, pipeline_result):
         _, inv_df, *_ = pipeline_result
-        assert len(inv_df) == 6
+        assert len(inv_df) == 7
 
     def test_every_job_has_target(self, pipeline_result):
         _, inv_df, *_ = pipeline_result

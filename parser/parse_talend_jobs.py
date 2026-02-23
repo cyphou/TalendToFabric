@@ -75,6 +75,12 @@ class TalendJobParser:
         # Extract subjob info
         subjobs = self._extract_subjobs(root)
 
+        # Extract schema columns from metadata
+        schemas = self._extract_schemas(root)
+
+        # Extract tMap expressions (join keys, expressions, rejects)
+        tmap_details = self._extract_tmap_details(root)
+
         # Determine job characteristics
         has_custom_code = any(
             c["component_type"] in ("tJava", "tJavaRow", "tJavaFlex", "tGroovy", "tPythonRow", "tJavaScript")
@@ -99,6 +105,8 @@ class TalendJobParser:
             "connections": connections,
             "context_params": context_params,
             "subjobs": subjobs,
+            "schemas": schemas,
+            "tmap_details": tmap_details,
             "has_custom_code": has_custom_code,
             "input_components": [c for c in components if c.get("is_input")],
             "output_components": [c for c in components if c.get("is_output")],
@@ -235,6 +243,13 @@ class TalendJobParser:
             "tDenormalizeRow", "tNormalizeRow",
             "tFillEmptyField", "tFilterColumns", "tRenameColumns",
             "tSortWithinGroups", "tLevenshteinDistance",
+            # Hash in-memory lookup
+            "tHashInput", "tHashOutput",
+            # XML / XSLT
+            "tXSLT",
+            # Data quality
+            "tPatternCheck", "tValueCount", "tSurvivorshipRules",
+            "tStandardize", "tMatchPairing",
             # ELT transforms
             "tELTMap", "tELTAggregate", "tELTFilter", "tELTSort",
             "tELTUnite", "tELTJoin", "tELTDistinct",
@@ -264,15 +279,36 @@ class TalendJobParser:
 
         # DB operation components
         db_operation_types = (
+            # Generic connections
             "tOracleConnection", "tPostgresqlConnection", "tMSSqlConnection",
             "tMysqlConnection", "tDBConnection",
-            "tOracleCommit", "tDBCommit", "tOracleRollback", "tDBRollback",
-            "tOracleSP", "tDBSP", "tDBRow",
-            "tDBBulkExec", "tOracleBulkExec",
+            "tDB2Connection", "tTeradataConnection", "tSnowflakeConnection",
+            "tSybaseConnection", "tRedshiftConnection", "tHiveConnection",
+            "tSQLiteConnection", "tInformixConnection",
+            "tVerticaConnection", "tNetezzaConnection", "tGreenplumConnection",
+            "tAS400Connection", "tSAPHanaConnection", "tImpalaConnection",
+            # Commit / Rollback / Close
+            "tOracleCommit", "tDBCommit", "tMSSqlCommit", "tMysqlCommit", "tPostgresqlCommit",
+            "tOracleRollback", "tDBRollback",
+            "tOracleClose", "tDBClose", "tMSSqlClose", "tMysqlClose", "tPostgresqlClose",
+            # Stored procedures
+            "tOracleSP", "tDBSP", "tMSSqlSP", "tMysqlSP", "tPostgresqlSP",
+            # DML / Row execution
+            "tDBRow", "tOracleRow", "tPostgresqlRow", "tMSSqlRow", "tMysqlRow", "tDB2Row",
+            # Bulk operations
+            "tDBBulkExec", "tOracleBulkExec", "tMysqlBulkExec", "tMSSqlBulkExec",
+            "tPostgresqlBulkExec", "tTeradataBulkExec", "tSnowflakeBulkExec",
+            "tOracleOutputBulk", "tPostgresqlOutputBulk", "tMSSqlOutputBulk",
+            "tOracleInputBulk",
+            # DDL
             "tCreateTable", "tDropTable", "tAlterTable",
+            "tHiveCreateTable", "tHiveLoad", "tHiveRow",
+            # Metadata
             "tDBTableList", "tDBColumnList",
-            "tOracleClose", "tDBClose",
+            # Other
             "tSetDBAutoCommit", "tDBLastInsertId", "tDBValidation",
+            # CDC
+            "tOracleCDC", "tMysqlCDC", "tMSSqlCDC", "tPostgresqlCDC", "tDBCDC",
         )
 
         # File / Directory utility components
@@ -295,6 +331,14 @@ class TalendJobParser:
             "tPrintVars", "tTimestamp",
         )
 
+        # Big Data / Hadoop components
+        bigdata_types = (
+            "tSqoopImport", "tSqoopExport", "tSparkConfiguration",
+            "tPigLoad", "tPigMap", "tPigStore",
+            "tMapReduceInput", "tMapReduceOutput",
+            "tSparkInput", "tSparkOutput",
+        )
+
         # Classification logic
         is_input = (
             any(component_type.startswith(p) and ("Input" in component_type or "Get" in component_type)
@@ -313,13 +357,10 @@ class TalendJobParser:
         is_db_operation = component_type in db_operation_types
         is_file_utility = component_type in file_utility_types
         is_utility = component_type in utility_types
+        is_bigdata = component_type in bigdata_types
 
-        # Determine category
-        if is_input:
-            category = "input"
-        elif is_output:
-            category = "output"
-        elif is_transformation:
+        # Determine category — exact-match categories take precedence
+        if is_transformation:
             category = "transformation"
         elif is_flow_control:
             category = "flow_control"
@@ -331,6 +372,12 @@ class TalendJobParser:
             category = "db_operation"
         elif is_file_utility:
             category = "file_utility"
+        elif is_bigdata:
+            category = "bigdata"
+        elif is_input:
+            category = "input"
+        elif is_output:
+            category = "output"
         elif is_utility:
             category = "utility"
         else:
@@ -361,6 +408,7 @@ class TalendJobParser:
             "is_db_operation": is_db_operation,
             "is_file_utility": is_file_utility,
             "is_utility": is_utility,
+            "is_bigdata": is_bigdata,
             "parameters": parameters,
         }
 
@@ -418,6 +466,151 @@ class TalendJobParser:
                 })
 
         return subjobs
+
+    def _extract_schemas(self, root: etree._Element) -> List[Dict[str, Any]]:
+        """Extract schema column definitions from component metadata."""
+        schemas = []
+
+        for node in root.iter():
+            if callable(node.tag):
+                continue
+            tag = etree.QName(node.tag).localname if "}" in node.tag else node.tag
+            if tag == "node":
+                comp_name = node.get("componentName", "")
+                unique_name = ""
+                columns = []
+
+                for child in node.iter():
+                    if callable(child.tag):
+                        continue
+                    child_tag = etree.QName(child.tag).localname if "}" in child.tag else child.tag
+                    if child_tag == "elementParameter" and child.get("name") == "UNIQUE_NAME":
+                        unique_name = child.get("value", "")
+                    if child_tag == "column":
+                        col = {
+                            "name": child.get("name", ""),
+                            "talend_type": child.get("type", child.get("talendType", "")),
+                            "db_type": child.get("dbType", child.get("sourceType", "")),
+                            "length": child.get("length", ""),
+                            "precision": child.get("precision", ""),
+                            "nullable": child.get("nullable", "true"),
+                            "key": child.get("key", "false"),
+                            "default": child.get("default", ""),
+                            "comment": child.get("comment", ""),
+                            "pattern": child.get("pattern", ""),
+                        }
+                        columns.append(col)
+
+                if columns:
+                    schemas.append({
+                        "component": comp_name,
+                        "unique_name": unique_name,
+                        "columns": columns,
+                    })
+
+        return schemas
+
+    def _extract_tmap_details(self, root: etree._Element) -> List[Dict[str, Any]]:
+        """Extract tMap internal structure: input/output tables, expressions, join keys, rejects."""
+        tmap_details = []
+
+        for node in root.iter():
+            if callable(node.tag):
+                continue
+            tag = etree.QName(node.tag).localname if "}" in node.tag else node.tag
+            if tag == "node" and node.get("componentName") == "tMap":
+                unique_name = ""
+                for child in node.iter():
+                    if callable(child.tag):
+                        continue
+                    child_tag = etree.QName(child.tag).localname if "}" in child.tag else child.tag
+                    if child_tag == "elementParameter" and child.get("name") == "UNIQUE_NAME":
+                        unique_name = child.get("value", "")
+
+                detail = {
+                    "unique_name": unique_name,
+                    "input_tables": [],
+                    "output_tables": [],
+                    "var_tables": [],
+                    "expressions": [],
+                }
+
+                for child in node.iter():
+                    if callable(child.tag):
+                        continue
+                    child_tag = etree.QName(child.tag).localname if "}" in child.tag else child.tag
+
+                    if child_tag in ("inputTable", "InputTable"):
+                        table = {
+                            "name": child.get("name", ""),
+                            "matching_mode": child.get("matchingMode", ""),
+                            "lookup_mode": child.get("lookupMode", ""),
+                            "inner_join": child.get("innerJoin", "false"),
+                            "join_model": child.get("joinModel", ""),
+                            "columns": [],
+                        }
+                        for col in child:
+                            if callable(col.tag):
+                                continue
+                            col_tag = etree.QName(col.tag).localname if "}" in col.tag else col.tag
+                            if col_tag in ("mapperTableEntry", "MapperTableEntry"):
+                                table["columns"].append({
+                                    "name": col.get("name", ""),
+                                    "expression": col.get("expression", ""),
+                                    "type": col.get("type", ""),
+                                    "nullable": col.get("nullable", ""),
+                                })
+                        detail["input_tables"].append(table)
+
+                    elif child_tag in ("outputTable", "OutputTable"):
+                        table = {
+                            "name": child.get("name", ""),
+                            "reject": child.get("reject", "false"),
+                            "reject_inner_join": child.get("rejectInnerJoin", "false"),
+                            "columns": [],
+                        }
+                        for col in child:
+                            if callable(col.tag):
+                                continue
+                            col_tag = etree.QName(col.tag).localname if "}" in col.tag else col.tag
+                            if col_tag in ("mapperTableEntry", "MapperTableEntry"):
+                                table["columns"].append({
+                                    "name": col.get("name", ""),
+                                    "expression": col.get("expression", ""),
+                                    "type": col.get("type", ""),
+                                })
+                        detail["output_tables"].append(table)
+
+                    elif child_tag in ("varTable", "VarTable"):
+                        table = {
+                            "name": child.get("name", ""),
+                            "columns": [],
+                        }
+                        for col in child:
+                            if callable(col.tag):
+                                continue
+                            col_tag = etree.QName(col.tag).localname if "}" in col.tag else col.tag
+                            if col_tag in ("mapperTableEntry", "MapperTableEntry"):
+                                table["columns"].append({
+                                    "name": col.get("name", ""),
+                                    "expression": col.get("expression", ""),
+                                    "type": col.get("type", ""),
+                                })
+                        detail["var_tables"].append(table)
+
+                for tbl in detail["input_tables"] + detail["output_tables"] + detail["var_tables"]:
+                    for col in tbl.get("columns", []):
+                        expr = col.get("expression", "")
+                        if expr:
+                            detail["expressions"].append({
+                                "table": tbl["name"],
+                                "column": col["name"],
+                                "expression": expr,
+                            })
+
+                tmap_details.append(detail)
+
+        return tmap_details
 
 
 def display_summary(jobs: List[Dict[str, Any]]) -> None:

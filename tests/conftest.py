@@ -69,6 +69,11 @@ def custom_code_item():
     return FIXTURES_DIR / "custom_code_job.item"
 
 
+@pytest.fixture
+def cdc_hash_item():
+    return FIXTURES_DIR / "cdc_hash_job.item"
+
+
 # ── Parser instances ────────────────────────────────────────────────────────
 
 @pytest.fixture
@@ -114,6 +119,11 @@ def parsed_file_transfer(parser, file_transfer_item):
 @pytest.fixture
 def parsed_custom_code(parser, custom_code_item):
     return parser.parse_item_file(custom_code_item)
+
+
+@pytest.fixture
+def parsed_cdc_hash(parser, cdc_hash_item):
+    return parser.parse_item_file(cdc_hash_item)
 
 
 # ── Inventory row helpers ───────────────────────────────────────────────────

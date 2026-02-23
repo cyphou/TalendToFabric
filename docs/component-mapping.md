@@ -1,8 +1,9 @@
 # Talend Component → Microsoft Fabric Mapping
 
-> **Coverage**: This mapping covers **140+** Talend components across all categories:
+> **Coverage**: This mapping covers **200+** Talend components across all categories:
 > Sources, Transformations, Outputs, Flow Control, Database Operations, Error Handling,
-> File Management, Cloud Storage, NoSQL, Messaging, API/Protocol, and Utilities.
+> File Management, Cloud Storage, NoSQL, Messaging, API/Protocol, CDC, Big Data,
+> Data Quality, MDM, Hash/In-Memory, and Utilities.
 
 ---
 
@@ -24,6 +25,12 @@
 | `tSQLiteInput` | Not supported natively | `spark.read.jdbc(...)` with SQLite driver |
 | `tAccessInput` | Not supported natively | Convert to CSV/Parquet first |
 | `tInformixInput` | Copy Activity (Informix source) | `spark.read.jdbc(...)` |
+| `tVerticaInput` | Copy Activity (Vertica source) | `spark.read.jdbc(...)` |
+| `tNetezzaInput` | Copy Activity (Netezza source) | `spark.read.jdbc(...)` |
+| `tGreenplumInput` | Copy Activity (Greenplum source) | `spark.read.jdbc(...)` |
+| `tAS400Input` | Copy Activity (DB2 for i source) | `spark.read.jdbc(...)` |
+| `tSAPHanaInput` | Copy Activity (SAP HANA source) | `spark.read.jdbc(...)` |
+| `tImpalaInput` | Not supported natively | `spark.read.jdbc(...)` (Impala driver) |
 
 ## 2. Database Output Components
 
@@ -40,6 +47,15 @@
 | `tHiveOutput` | Not applicable (write to Lakehouse) | `df.write.saveAsTable(...)` |
 | `tDBOutput` | Copy Activity (generic sink) | `df.write.jdbc(...)` with generic driver |
 | `tSQLiteOutput` | Not supported natively | `df.write.jdbc(...)` with SQLite driver |
+| `tSybaseOutput` | Copy Activity (Sybase/SAP ASE sink) | `df.write.jdbc(...)` |
+| `tInformixOutput` | Copy Activity (Informix sink) | `df.write.jdbc(...)` |
+| `tVerticaOutput` | Copy Activity (Vertica sink) | `df.write.jdbc(...)` |
+| `tNetezzaOutput` | Copy Activity (Netezza sink) | `df.write.jdbc(...)` |
+| `tGreenplumOutput` | Copy Activity (Greenplum sink) | `df.write.jdbc(...)` |
+| `tAS400Output` | Copy Activity (DB2 for i sink) | `df.write.jdbc(...)` |
+| `tSAPHanaOutput` | Copy Activity (SAP HANA sink) | `df.write.jdbc(...)` |
+| `tImpalaOutput` | Not supported natively | `df.write.jdbc(...)` (Impala driver) |
+| `tAccessOutput` | Not supported natively | Convert to CSV/Parquet first |
 
 ## 3. Database Operation Components
 
@@ -55,6 +71,12 @@
 | `tOracleSP` / `tDBSP` | Stored Procedure activity | `spark.sql("CALL ...")` |
 | `tDBRow` | Script activity / Stored Proc | `spark.sql("INSERT/UPDATE/DELETE ...")` |
 | `tDBBulkExec` / `tOracleBulkExec` | Copy Activity (bulk mode) | JDBC batch write / `df.write.jdbc(batchsize=N)` |
+| `tMysqlBulkExec` | Copy Activity (bulk mode) | `df.write.jdbc(batchsize=N)` (LOAD DATA INFILE) |
+| `tMSSqlBulkExec` | Copy Activity (bulk mode) | `df.write.jdbc(batchsize=N)` (BCP/BULK INSERT) |
+| `tPostgresqlBulkExec` | Copy Activity (bulk mode) | `df.write.jdbc(batchsize=N)` (COPY) |
+| `tTeradataBulkExec` | Copy Activity (bulk mode) | `df.write.jdbc(batchsize=N)` (FastLoad) |
+| `tSnowflakeBulkExec` | Copy Activity (bulk mode) | `df.write.format('snowflake')` (COPY INTO) |
+| `tOracleOutputBulk` / `tPostgresqlOutputBulk` / `tMSSqlOutputBulk` | Copy Activity (bulk) | `df.write.jdbc(batchsize=N)` |
 | `tCreateTable` | Script activity (DDL) | `spark.sql("CREATE TABLE ...")` |
 | `tDropTable` | Script activity (DDL) | `spark.sql("DROP TABLE ...")` |
 | `tAlterTable` | Script activity (DDL) | `spark.sql("ALTER TABLE ...")` |
@@ -321,3 +343,101 @@
 | `tPigLoad` / `tPigStore` | Not applicable | Rewrite as PySpark |
 | `tMapReduceInput` / `tMapReduceOutput` | Not applicable | Rewrite as PySpark |
 | `tImpalaInput` / `tImpalaOutput` | Not natively supported | `spark.read.jdbc(...)` with Impala JDBC |
+
+## 19. Change Data Capture (CDC) Components
+
+| Talend Component | Fabric Data Factory | Fabric Spark |
+|---|---|---|
+| `tOracleCDC` | Copy Activity (incremental) | Watermark query / Fabric Mirroring |
+| `tMysqlCDC` | Copy Activity (incremental) | Debezium → Event Hub → Spark Streaming |
+| `tMSSqlCDC` | Copy Activity (incremental) | Fabric Mirroring / Watermark pattern |
+| `tPostgresqlCDC` | Copy Activity (incremental) | Logical replication / Watermark pattern |
+| `tDBCDC` | Copy Activity (incremental) | Watermark column + Delta MERGE |
+
+> **Note:** Talend CDC components use database-specific log readers (LogMiner, binlog, etc.).
+> In Fabric, prefer **Fabric Mirroring** (for SQL Server, Azure SQL, Cosmos DB) or
+> **watermark-based incremental loads** (see `templates/spark/cdc_watermark.py`).
+
+## 20. Hash / In-Memory Lookup Components
+
+| Talend Component | Fabric Data Factory | Fabric Spark |
+|---|---|---|
+| `tHashInput` | Not applicable | `broadcast(df)` / `df.cache()` |
+| `tHashOutput` | Not applicable | `df.cache()` / `df.persist(StorageLevel.MEMORY_ONLY)` |
+
+> **Note:** In Talend, `tHashOutput` writes rows to an in-memory hash table, and `tHashInput`
+> reads them back — typically used for multi-pass processing or lookup caching within a job.
+> In Spark, use `df.cache()` or `broadcast(df)` for equivalent behavior. For tMap lookups
+> that use tHashInput, translate to broadcast joins: `main_df.join(broadcast(lookup_df), ...)`.
+
+## 21. Database-Specific Operations (per vendor)
+
+| Operation | Oracle | SQL Server | MySQL | PostgreSQL | DB2 |
+|---|---|---|---|---|---|
+| **Connection** | `tOracleConnection` | `tMSSqlConnection` | `tMysqlConnection` | `tPostgresqlConnection` | `tDB2Connection` |
+| **Row (DML)** | `tOracleRow` | `tMSSqlRow` | `tMysqlRow` | `tPostgresqlRow` | `tDB2Row` |
+| **Stored Proc** | `tOracleSP` | `tMSSqlSP` | `tMysqlSP` | `tPostgresqlSP` | `tDBSP` |
+| **Bulk Exec** | `tOracleBulkExec` | `tMSSqlBulkExec` | `tMysqlBulkExec` | `tPostgresqlBulkExec` | — |
+| **Commit** | `tOracleCommit` | `tMSSqlCommit` | `tMysqlCommit` | `tPostgresqlCommit` | `tDBCommit` |
+| **Close** | `tOracleClose` | `tMSSqlClose` | `tMysqlClose` | `tPostgresqlClose` | `tDBClose` |
+| **CDC** | `tOracleCDC` | `tMSSqlCDC` | `tMysqlCDC` | `tPostgresqlCDC` | — |
+
+> All map to Fabric Data Factory activities (Linked Service + Script/Copy) or Spark JDBC operations.
+
+## 22. Additional Database Connectors
+
+| Talend Component | Fabric Data Factory | Fabric Spark |
+|---|---|---|
+| `tVerticaInput/Output/Connection` | Copy Activity (Vertica) | `spark.read.jdbc(...)` / `df.write.jdbc(...)` |
+| `tNetezzaInput/Output/Connection` | Copy Activity (Netezza) | `spark.read.jdbc(...)` / `df.write.jdbc(...)` |
+| `tGreenplumInput/Output/Connection` | Copy Activity (Greenplum) | `spark.read.jdbc(...)` / `df.write.jdbc(...)` |
+| `tAS400Input/Output/Connection` | Copy Activity (DB2 for i) | `spark.read.jdbc(...)` (jt400 driver) |
+| `tSAPHanaInput/Output/Connection` | Copy Activity (SAP HANA) | `spark.read.jdbc(...)` (ngdbc driver) |
+| `tImpalaInput/Output/Connection` | Not supported natively | `spark.read.jdbc(...)` (Impala driver) |
+| `tAccessInput/Output` | Not supported natively | Convert to CSV/Parquet first |
+
+## 23. Big Data / Hadoop Components (Deprecated → Spark)
+
+| Talend Component | Fabric Equivalent | Notes |
+|---|---|---|
+| `tSqoopImport` | `spark.read.jdbc(...)` | Sqoop deprecated — use Spark JDBC |
+| `tSqoopExport` | `df.write.jdbc(...)` | Sqoop deprecated — use Spark JDBC |
+| `tSparkConfiguration` | `SparkSession.builder.config()` | Set via Fabric Spark environment |
+| `tPigLoad` / `tPigMap` / `tPigStore` | PySpark equivalents | Pig deprecated — rewrite as PySpark |
+| `tMapReduceInput` / `tMapReduceOutput` | PySpark equivalents | MapReduce deprecated — rewrite as PySpark |
+| `tHiveCreateTable` | `spark.sql("CREATE TABLE ...")` | Native to Spark/Lakehouse |
+| `tHiveLoad` | `spark.sql("INSERT INTO ...")` | Native to Spark/Lakehouse |
+| `tHiveRow` | `spark.sql("DML ...")` | Native to Spark/Lakehouse |
+
+## 24. Advanced XML Components
+
+| Talend Component | Fabric Data Factory | Fabric Spark |
+|---|---|---|
+| `tXSLT` | Not supported | `lxml.etree.XSLT()` in Python |
+| `tAdvancedFileOutputXML` | Data Flow (XML sink) | `lxml.etree.Element()` — build XML tree |
+| `tWebServiceOutput` | Web Activity (POST) | Flask/FastAPI endpoint or Logic App |
+
+## 25. Merge / Upsert Patterns (tDBOutput Action Modes)
+
+| Talend Action Mode | Delta Lake Equivalent | Template |
+|---|---|---|
+| `INSERT` | `df.write.mode("append")` | `merge_upsert.py` |
+| `UPDATE` | `MERGE ... WHEN MATCHED UPDATE` | `merge_upsert.py` |
+| `INSERT_OR_UPDATE` | `MERGE ... WHEN MATCHED UPDATE + NOT MATCHED INSERT` | `merge_upsert.py` |
+| `UPDATE_OR_INSERT` | Same as INSERT_OR_UPDATE | `merge_upsert.py` |
+| `DELETE` | `MERGE ... WHEN MATCHED DELETE` | `merge_upsert.py` |
+| `DELETE_INSERT` | `MERGE DELETE + df.write.mode("append")` | `merge_upsert.py` |
+
+> See `templates/spark/merge_upsert.py` for the full implementation of all action modes.
+
+## 26. Available Spark Templates
+
+| Template | Talend Pattern | File |
+|---|---|---|
+| ETL Notebook | tInput → tMap → tOutput | `templates/spark/etl_notebook.py` |
+| Incremental Load | tDBInput with WHERE date > last_run | `templates/spark/incremental_load.py` |
+| Lookup & Join | tMap with lookup inputs | `templates/spark/lookup_pattern.py` |
+| SCD Type 1 | tDBOutput (UPDATE_OR_INSERT) | `templates/spark/scd_type1.py` |
+| SCD Type 2 | tDBOutput with history tracking | `templates/spark/scd_type2.py` |
+| CDC / Watermark | tOracleCDC / tMysqlCDC / tDBInput incremental | `templates/spark/cdc_watermark.py` |
+| Merge / Upsert | tDBOutput (all action modes) | `templates/spark/merge_upsert.py` |

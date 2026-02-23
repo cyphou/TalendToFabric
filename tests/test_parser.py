@@ -303,7 +303,7 @@ class TestParseAll:
     """Test parse_all() over the fixtures directory."""
 
     def test_all_fixtures_parsed(self, parsed_jobs):
-        assert len(parsed_jobs) == 6  # 6 fixture files
+        assert len(parsed_jobs) == 7  # 7 fixture files
 
     def test_all_jobs_have_required_keys(self, parsed_jobs):
         required_keys = {

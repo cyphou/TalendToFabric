@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<talendfile:ProcessType xmlns:talendfile="platform:/resource/org.talend.model/model/TalendFile.xsd"
+    xmlns:xmi="http://www.omg.org/XMI" xmi:version="2.0">
+  <context name="Default">
+    <contextParameter name="db_host" type="id_String" value="localhost" prompt="Database Host" comment="Source DB host"/>
+    <contextParameter name="db_name" type="id_String" value="sales_db" prompt="Database Name" comment="Source database"/>
+    <contextParameter name="last_cdc_timestamp" type="id_Date" value="2025-01-01" prompt="Last CDC Timestamp" comment="Watermark for CDC"/>
+  </context>
+
+  <!-- tMysqlConnection: open shared connection -->
+  <node componentName="tMysqlConnection" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tMysqlConnection_1"/>
+    <elementParameter name="HOST" value="context.db_host"/>
+    <elementParameter name="PORT" value="3306"/>
+    <elementParameter name="DBNAME" value="context.db_name"/>
+    <elementParameter name="USER" value="etl_user"/>
+    <elementParameter name="PASS" value="encrypted_pass"/>
+  </node>
+
+  <!-- tMysqlInput: read source data -->
+  <node componentName="tMysqlInput" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tMysqlInput_1"/>
+    <elementParameter name="QUERY" value="SELECT id, name, email, status, modified_date FROM customers WHERE modified_date > context.last_cdc_timestamp"/>
+    <elementParameter name="USE_EXISTING_CONNECTION" value="true"/>
+    <elementParameter name="CONNECTION" value="tMysqlConnection_1"/>
+    <metadata name="tMysqlInput_1">
+      <column name="id" talendType="id_Integer" dbType="INT" length="10" key="true" nullable="false"/>
+      <column name="name" talendType="id_String" dbType="VARCHAR" length="100" nullable="false"/>
+      <column name="email" talendType="id_String" dbType="VARCHAR" length="255" nullable="true"/>
+      <column name="status" talendType="id_String" dbType="VARCHAR" length="20" nullable="false" default="active"/>
+      <column name="modified_date" talendType="id_Date" dbType="DATETIME" pattern="yyyy-MM-dd HH:mm:ss" nullable="false"/>
+    </metadata>
+  </node>
+
+  <!-- tHashOutput: store customers in memory hash for later lookup -->
+  <node componentName="tHashOutput" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tHashOutput_1"/>
+    <elementParameter name="HASH_NAME" value="customerCache"/>
+  </node>
+
+  <!-- tMysqlInput_2: read orders -->
+  <node componentName="tMysqlInput" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tMysqlInput_2"/>
+    <elementParameter name="QUERY" value="SELECT order_id, customer_id, amount, order_date FROM orders WHERE order_date > context.last_cdc_timestamp"/>
+  </node>
+
+  <!-- tHashInput: read cached customers back from hash -->
+  <node componentName="tHashInput" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tHashInput_1"/>
+    <elementParameter name="HASH_NAME" value="customerCache"/>
+  </node>
+
+  <!-- tMap: join orders with cached customers, compute derived columns -->
+  <node componentName="tMap" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tMap_1"/>
+    <nodeData>
+      <inputTable name="orders" matchingMode="ALL_MATCHES" lookupMode="LOAD_ONCE" innerJoin="false" joinModel="LEFT_OUTER_JOIN">
+        <mapperTableEntry name="order_id" expression="orders.order_id" type="id_Integer"/>
+        <mapperTableEntry name="customer_id" expression="orders.customer_id" type="id_Integer"/>
+        <mapperTableEntry name="amount" expression="orders.amount" type="id_Double"/>
+      </inputTable>
+      <inputTable name="customerCache" matchingMode="UNIQUE_MATCH" lookupMode="LOAD_ONCE" innerJoin="true" joinModel="INNER_JOIN">
+        <mapperTableEntry name="id" expression="customerCache.id" type="id_Integer"/>
+        <mapperTableEntry name="name" expression="customerCache.name" type="id_String"/>
+        <mapperTableEntry name="email" expression="customerCache.email" type="id_String"/>
+      </inputTable>
+      <outputTable name="enriched_orders" reject="false" rejectInnerJoin="false">
+        <mapperTableEntry name="order_id" expression="orders.order_id" type="id_Integer"/>
+        <mapperTableEntry name="customer_name" expression="customerCache.name" type="id_String"/>
+        <mapperTableEntry name="customer_email" expression="customerCache.email" type="id_String"/>
+        <mapperTableEntry name="amount" expression="orders.amount" type="id_Double"/>
+        <mapperTableEntry name="amount_with_tax" expression="orders.amount * 1.2" type="id_Double"/>
+      </outputTable>
+      <outputTable name="rejected" reject="true" rejectInnerJoin="true">
+        <mapperTableEntry name="order_id" expression="orders.order_id" type="id_Integer"/>
+        <mapperTableEntry name="customer_id" expression="orders.customer_id" type="id_Integer"/>
+      </outputTable>
+      <varTable name="Var">
+        <mapperTableEntry name="tax_rate" expression="0.2" type="id_Double"/>
+      </varTable>
+    </nodeData>
+  </node>
+
+  <!-- tMysqlOutput: write enriched orders (INSERT_OR_UPDATE) -->
+  <node componentName="tMysqlOutput" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tMysqlOutput_1"/>
+    <elementParameter name="TABLE" value="enriched_orders"/>
+    <elementParameter name="DATA_ACTION" value="INSERT_OR_UPDATE"/>
+    <elementParameter name="COMMIT_EVERY" value="10000"/>
+    <elementParameter name="USE_BATCH" value="true"/>
+  </node>
+
+  <!-- tLogRow: log rejected rows -->
+  <node componentName="tLogRow" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tLogRow_1"/>
+  </node>
+
+  <!-- tMysqlCommit -->
+  <node componentName="tMysqlCommit" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tMysqlCommit_1"/>
+    <elementParameter name="CONNECTION" value="tMysqlConnection_1"/>
+  </node>
+
+  <!-- tMysqlClose -->
+  <node componentName="tMysqlClose" componentVersion="0.1">
+    <elementParameter name="UNIQUE_NAME" value="tMysqlClose_1"/>
+    <elementParameter name="CONNECTION" value="tMysqlConnection_1"/>
+  </node>
+
+  <!-- Connections -->
+  <connection source="tMysqlConnection_1" target="tMysqlInput_1" connectorName="SUBJOB_OK" lineStyle="1" label="OnSubjobOk"/>
+  <connection source="tMysqlInput_1" target="tHashOutput_1" connectorName="FLOW" lineStyle="0" label="row1"/>
+  <connection source="tHashOutput_1" target="tMysqlInput_2" connectorName="SUBJOB_OK" lineStyle="1" label="OnSubjobOk"/>
+  <connection source="tMysqlInput_2" target="tMap_1" connectorName="FLOW" lineStyle="0" label="orders"/>
+  <connection source="tHashInput_1" target="tMap_1" connectorName="FLOW" lineStyle="0" label="customerCache"/>
+  <connection source="tMap_1" target="tMysqlOutput_1" connectorName="FLOW" lineStyle="0" label="enriched_orders"/>
+  <connection source="tMap_1" target="tLogRow_1" connectorName="REJECT" lineStyle="0" label="rejected"/>
+  <connection source="tMysqlOutput_1" target="tMysqlCommit_1" connectorName="SUBJOB_OK" lineStyle="1" label="OnSubjobOk"/>
+  <connection source="tMysqlCommit_1" target="tMysqlClose_1" connectorName="SUBJOB_OK" lineStyle="1" label="OnSubjobOk"/>
+</talendfile:ProcessType>

@@ -1524,6 +1524,562 @@
       "data_factory": "KeyVaultReference",
       "spark": "mssparkutils.credentials.getSecret()",
       "notes": "Keystore / key vault"
+    },
+
+    "_comment_hash_components": "=== HASH / IN-MEMORY LOOKUP COMPONENTS ===",
+    "tHashInput": {
+      "category": "transform",
+      "data_factory": "NotApplicable",
+      "spark": "broadcast(df) / df.cache()",
+      "notes": "Read from in-memory hash table — replace with broadcast join or cached DataFrame"
+    },
+    "tHashOutput": {
+      "category": "transform",
+      "data_factory": "NotApplicable",
+      "spark": "df.cache() / df.persist(StorageLevel.MEMORY_ONLY)",
+      "notes": "Write to in-memory hash table — replace with cached/broadcast DataFrame"
+    },
+
+    "_comment_cdc": "=== CHANGE DATA CAPTURE (CDC) COMPONENTS ===",
+    "tOracleCDC": {
+      "category": "cdc",
+      "data_factory": "CopyActivity_Incremental",
+      "spark": "spark.read.jdbc() with watermark filter",
+      "notes": "Oracle CDC via LogMiner/XStream — use watermark or Fabric Mirroring"
+    },
+    "tMysqlCDC": {
+      "category": "cdc",
+      "data_factory": "CopyActivity_Incremental",
+      "spark": "spark.read.jdbc() with watermark filter",
+      "notes": "MySQL CDC via binlog — use watermark or Debezium + Event Hub"
+    },
+    "tMSSqlCDC": {
+      "category": "cdc",
+      "data_factory": "CopyActivity_Incremental",
+      "spark": "spark.read.jdbc() with watermark filter",
+      "notes": "SQL Server CDC — use Fabric Mirroring or watermark pattern"
+    },
+    "tPostgresqlCDC": {
+      "category": "cdc",
+      "data_factory": "CopyActivity_Incremental",
+      "spark": "spark.read.jdbc() with watermark filter",
+      "notes": "PostgreSQL CDC via logical replication — use Fabric Mirroring or Debezium"
+    },
+    "tDBCDC": {
+      "category": "cdc",
+      "data_factory": "CopyActivity_Incremental",
+      "spark": "spark.read.jdbc() with watermark filter",
+      "notes": "Generic CDC — use incremental load with high watermark column"
+    },
+
+    "_comment_db_specific_ops": "=== DATABASE-SPECIFIC OPERATION COMPONENTS ===",
+    "tOracleRow": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity",
+      "spark": "spark.sql('DML statement')",
+      "notes": "Execute arbitrary SQL on Oracle"
+    },
+    "tPostgresqlRow": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity",
+      "spark": "spark.sql('DML statement')",
+      "notes": "Execute arbitrary SQL on PostgreSQL"
+    },
+    "tMSSqlRow": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity",
+      "spark": "spark.sql('DML statement')",
+      "notes": "Execute arbitrary SQL on SQL Server"
+    },
+    "tMysqlRow": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity",
+      "spark": "spark.sql('DML statement')",
+      "notes": "Execute arbitrary SQL on MySQL"
+    },
+    "tDB2Row": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity",
+      "spark": "spark.sql('DML statement')",
+      "notes": "Execute arbitrary SQL on DB2"
+    },
+    "tOracleSP": {
+      "category": "db_operation",
+      "data_factory": "StoredProcedureActivity",
+      "spark": "spark.sql('CALL ...')",
+      "notes": "Oracle stored procedure"
+    },
+    "tMSSqlSP": {
+      "category": "db_operation",
+      "data_factory": "StoredProcedureActivity",
+      "spark": "spark.sql('EXEC ...')",
+      "notes": "SQL Server stored procedure"
+    },
+    "tMysqlSP": {
+      "category": "db_operation",
+      "data_factory": "StoredProcedureActivity",
+      "spark": "spark.sql('CALL ...')",
+      "notes": "MySQL stored procedure"
+    },
+    "tPostgresqlSP": {
+      "category": "db_operation",
+      "data_factory": "StoredProcedureActivity",
+      "spark": "spark.sql('CALL ...')",
+      "notes": "PostgreSQL stored procedure / function"
+    },
+    "tMysqlBulkExec": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.jdbc(batchsize=N)",
+      "notes": "MySQL LOAD DATA INFILE — bulk insert"
+    },
+    "tMSSqlBulkExec": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.jdbc(batchsize=N)",
+      "notes": "SQL Server BCP / BULK INSERT"
+    },
+    "tPostgresqlBulkExec": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.jdbc(batchsize=N)",
+      "notes": "PostgreSQL COPY — bulk insert"
+    },
+    "tTeradataBulkExec": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.jdbc(batchsize=N)",
+      "notes": "Teradata FastLoad/MultiLoad — bulk insert"
+    },
+    "tSnowflakeBulkExec": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.format('snowflake')",
+      "notes": "Snowflake COPY INTO — bulk insert"
+    },
+    "tOracleOutputBulk": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.jdbc(batchsize=N)",
+      "notes": "Oracle SQL*Loader style bulk output"
+    },
+    "tPostgresqlOutputBulk": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.jdbc(batchsize=N)",
+      "notes": "PostgreSQL COPY style bulk output"
+    },
+    "tMSSqlOutputBulk": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.jdbc(batchsize=N)",
+      "notes": "SQL Server BCP style bulk output"
+    },
+    "tOracleInputBulk": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "spark.read.jdbc(fetchsize=N)",
+      "notes": "Oracle bulk input with external tables"
+    },
+    "tMSSqlCommit": {
+      "category": "db_operation",
+      "data_factory": "AutoCommit",
+      "spark": "Explicit commit / auto in Spark",
+      "notes": "SQL Server transaction commit"
+    },
+    "tMysqlCommit": {
+      "category": "db_operation",
+      "data_factory": "AutoCommit",
+      "spark": "Explicit commit / auto in Spark",
+      "notes": "MySQL transaction commit"
+    },
+    "tPostgresqlCommit": {
+      "category": "db_operation",
+      "data_factory": "AutoCommit",
+      "spark": "Explicit commit / auto in Spark",
+      "notes": "PostgreSQL transaction commit"
+    },
+    "tMSSqlClose": {
+      "category": "db_operation",
+      "data_factory": "Automatic",
+      "spark": "Connection auto-close",
+      "notes": "SQL Server close connection"
+    },
+    "tMysqlClose": {
+      "category": "db_operation",
+      "data_factory": "Automatic",
+      "spark": "Connection auto-close",
+      "notes": "MySQL close connection"
+    },
+    "tPostgresqlClose": {
+      "category": "db_operation",
+      "data_factory": "Automatic",
+      "spark": "Connection auto-close",
+      "notes": "PostgreSQL close connection"
+    },
+    "tDB2Connection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Db2",
+      "spark": "JDBC connection properties",
+      "notes": "DB2 connection definition"
+    },
+    "tTeradataConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Teradata",
+      "spark": "JDBC connection properties",
+      "notes": "Teradata connection definition"
+    },
+    "tSnowflakeConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Snowflake",
+      "spark": "Snowflake connector config",
+      "notes": "Snowflake connection definition"
+    },
+    "tSybaseConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Odbc",
+      "spark": "JDBC connection properties",
+      "notes": "Sybase / SAP ASE connection definition"
+    },
+    "tRedshiftConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_AmazonRedshift",
+      "spark": "JDBC connection properties",
+      "notes": "Amazon Redshift connection definition"
+    },
+    "tHiveConnection": {
+      "category": "db_connection",
+      "data_factory": "NotApplicable_NativeToSpark",
+      "spark": "spark.sql() — native",
+      "notes": "Hive connection — native in Spark/Lakehouse"
+    },
+    "tSQLiteConnection": {
+      "category": "db_connection",
+      "data_factory": "NotSupported",
+      "spark": "JDBC connection properties",
+      "notes": "SQLite connection"
+    },
+    "tInformixConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Informix",
+      "spark": "JDBC connection properties",
+      "notes": "Informix connection definition"
+    },
+
+    "_comment_extra_databases": "=== ADDITIONAL DATABASE COMPONENTS ===",
+    "tVerticaInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "VerticaSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Vertica source"
+    },
+    "tVerticaOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "VerticaSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Vertica sink"
+    },
+    "tVerticaConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Vertica",
+      "spark": "JDBC connection properties",
+      "notes": "Vertica connection"
+    },
+    "tNetezzaInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "NetezzaSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Netezza source"
+    },
+    "tNetezzaOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "NetezzaSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Netezza sink"
+    },
+    "tNetezzaConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Netezza",
+      "spark": "JDBC connection properties",
+      "notes": "Netezza connection"
+    },
+    "tGreenplumInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "GreenplumSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Greenplum source"
+    },
+    "tGreenplumOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "GreenplumSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Greenplum sink"
+    },
+    "tGreenplumConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Greenplum",
+      "spark": "JDBC connection properties",
+      "notes": "Greenplum connection"
+    },
+    "tAS400Input": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "Db2Source",
+      "spark": "spark.read.jdbc()",
+      "notes": "AS/400 (DB2 for i) source"
+    },
+    "tAS400Output": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "Db2Sink",
+      "spark": "df.write.jdbc()",
+      "notes": "AS/400 (DB2 for i) sink"
+    },
+    "tAS400Connection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Db2",
+      "spark": "JDBC connection properties (jt400 driver)",
+      "notes": "AS/400 connection"
+    },
+    "tSAPHanaInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "SapHanaSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "SAP HANA source"
+    },
+    "tSAPHanaOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "SapHanaSink",
+      "spark": "df.write.jdbc()",
+      "notes": "SAP HANA sink"
+    },
+    "tSAPHanaConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_SapHana",
+      "spark": "JDBC connection properties (ngdbc driver)",
+      "notes": "SAP HANA connection"
+    },
+    "tSybaseOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "OdbcSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Sybase / SAP ASE sink"
+    },
+    "tInformixOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "InformixSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Informix sink"
+    },
+    "tAccessInput": {
+      "category": "db_input",
+      "data_factory": "NotSupported",
+      "spark": "spark.read.jdbc() (UCanAccess driver)",
+      "notes": "MS Access source — convert to CSV/Parquet first"
+    },
+    "tAccessOutput": {
+      "category": "db_output",
+      "data_factory": "NotSupported",
+      "spark": "df.write.jdbc() (UCanAccess driver)",
+      "notes": "MS Access sink — convert to CSV/Parquet first"
+    },
+    "tSQLiteOutput": {
+      "category": "db_output",
+      "data_factory": "NotSupported",
+      "spark": "df.write.jdbc()",
+      "notes": "SQLite sink — use JDBC driver"
+    },
+
+    "_comment_bigdata": "=== BIG DATA / HADOOP COMPONENTS ===",
+    "tHiveCreateTable": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity_DDL",
+      "spark": "spark.sql('CREATE TABLE ...')",
+      "notes": "Create Hive/Lakehouse table"
+    },
+    "tHiveLoad": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity",
+      "spark": "spark.sql('INSERT INTO ... SELECT ...')",
+      "notes": "Load data into Hive/Lakehouse table"
+    },
+    "tHiveRow": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity",
+      "spark": "spark.sql('DML statement')",
+      "notes": "Execute HiveQL statement"
+    },
+    "tSqoopImport": {
+      "category": "bigdata",
+      "data_factory": "CopyActivity",
+      "spark": "spark.read.jdbc() — Sqoop is deprecated, use Spark JDBC",
+      "notes": "Sqoop import — replaced by Spark JDBC direct read"
+    },
+    "tSqoopExport": {
+      "category": "bigdata",
+      "data_factory": "CopyActivity",
+      "spark": "df.write.jdbc() — Sqoop is deprecated, use Spark JDBC",
+      "notes": "Sqoop export — replaced by Spark JDBC direct write"
+    },
+    "tSparkConfiguration": {
+      "category": "bigdata",
+      "data_factory": "NotApplicable",
+      "spark": "SparkSession.builder.config(key, value)",
+      "notes": "Spark configuration — set via Fabric Spark environment"
+    },
+    "tImpalaInput": {
+      "category": "db_input",
+      "data_factory": "NotSupported",
+      "spark": "spark.read.jdbc() (Impala JDBC driver)",
+      "notes": "Impala source"
+    },
+    "tImpalaOutput": {
+      "category": "db_output",
+      "data_factory": "NotSupported",
+      "spark": "df.write.jdbc() (Impala JDBC driver)",
+      "notes": "Impala sink"
+    },
+    "tImpalaConnection": {
+      "category": "db_connection",
+      "data_factory": "NotSupported",
+      "spark": "JDBC connection properties (Impala driver)",
+      "notes": "Impala connection"
+    },
+    "tPigLoad": {
+      "category": "bigdata",
+      "data_factory": "NotApplicable",
+      "spark": "Rewrite as spark.read — Pig is deprecated",
+      "notes": "Pig load — rewrite as PySpark"
+    },
+    "tPigMap": {
+      "category": "bigdata",
+      "data_factory": "NotApplicable",
+      "spark": "Rewrite as PySpark transformations",
+      "notes": "Pig mapping — rewrite as PySpark"
+    },
+    "tPigStore": {
+      "category": "bigdata",
+      "data_factory": "NotApplicable",
+      "spark": "Rewrite as df.write — Pig is deprecated",
+      "notes": "Pig store — rewrite as PySpark"
+    },
+    "tMapReduceInput": {
+      "category": "bigdata",
+      "data_factory": "NotApplicable",
+      "spark": "Rewrite as spark.read — MapReduce is deprecated",
+      "notes": "MapReduce input — rewrite as PySpark"
+    },
+    "tMapReduceOutput": {
+      "category": "bigdata",
+      "data_factory": "NotApplicable",
+      "spark": "Rewrite as df.write — MapReduce is deprecated",
+      "notes": "MapReduce output — rewrite as PySpark"
+    },
+    "tSparkInput": {
+      "category": "bigdata",
+      "data_factory": "NotApplicable",
+      "spark": "spark.read — native",
+      "notes": "Spark input — already native"
+    },
+    "tSparkOutput": {
+      "category": "bigdata",
+      "data_factory": "NotApplicable",
+      "spark": "df.write — native",
+      "notes": "Spark output — already native"
+    },
+
+    "_comment_xml_advanced": "=== ADVANCED XML / XSLT COMPONENTS ===",
+    "tXSLT": {
+      "category": "transform",
+      "data_factory": "NotSupported",
+      "spark": "lxml.etree.XSLT() in Python",
+      "notes": "XSLT transformation — use Python lxml for stylesheet transforms"
+    },
+    "tAdvancedFileOutputXML": {
+      "category": "file_output",
+      "data_factory": "DataFlow_XmlSink",
+      "spark": "lxml.etree.Element() — build XML tree in Python",
+      "notes": "Advanced hierarchical XML output with nested elements"
+    },
+    "tWebServiceOutput": {
+      "category": "api",
+      "data_factory": "WebActivity_POST",
+      "spark": "Flask / FastAPI endpoint",
+      "notes": "Web service response — use notebook as REST endpoint or Logic App"
+    },
+
+    "_comment_mq": "=== IBM MQ SERIES COMPONENTS ===",
+    "tMQSeriesInput": {
+      "category": "messaging",
+      "data_factory": "NotSupported",
+      "spark": "pymqi Python library",
+      "notes": "IBM MQ consumer"
+    },
+    "tMQSeriesOutput": {
+      "category": "messaging",
+      "data_factory": "NotSupported",
+      "spark": "pymqi Python library",
+      "notes": "IBM MQ producer"
+    },
+    "tMQSeriesConnection": {
+      "category": "messaging",
+      "data_factory": "NotSupported",
+      "spark": "pymqi connection manager",
+      "notes": "IBM MQ connection"
+    },
+
+    "_comment_mdm_dq": "=== MDM & DATA QUALITY COMPONENTS ===",
+    "tMDMInput": {
+      "category": "api",
+      "data_factory": "WebActivity_REST",
+      "spark": "requests + Fabric API",
+      "notes": "Talend MDM input — use REST API or Fabric data pipeline"
+    },
+    "tMDMOutput": {
+      "category": "api",
+      "data_factory": "WebActivity_REST",
+      "spark": "requests + Fabric API",
+      "notes": "Talend MDM output"
+    },
+    "tPatternCheck": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn",
+      "spark": "F.rlike() / F.regexp_extract()",
+      "notes": "Regex pattern validation"
+    },
+    "tValueCount": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Aggregate",
+      "spark": "df.groupBy().count()",
+      "notes": "Value distribution count"
+    },
+    "tSurvivorshipRules": {
+      "category": "transform",
+      "data_factory": "NotSupported",
+      "spark": "Custom PySpark survivorship logic",
+      "notes": "Record survivorship — pick best record from duplicates"
+    },
+    "tStandardize": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn",
+      "spark": "F.when() / lookup tables / UDF",
+      "notes": "Data standardization / cleansing"
+    },
+    "tMatchPairing": {
+      "category": "transform",
+      "data_factory": "NotSupported",
+      "spark": "recordlinkage library",
+      "notes": "Record matching / pairing"
     }
   }
 }

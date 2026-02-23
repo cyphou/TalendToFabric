@@ -320,6 +320,50 @@
       "description": "Azure Event Hub connection",
       "linked_service_template": null,
       "notes": "Native Event Hub support in Fabric"
+    },
+
+    "_comment_additional_db": "=== ADDITIONAL DATABASE CONNECTIONS ===",
+    "tVerticaConnection": {
+      "fabric_type": "Vertica",
+      "description": "Vertica database connection",
+      "linked_service_template": null,
+      "notes": "Use Vertica linked service type"
+    },
+    "tNetezzaConnection": {
+      "fabric_type": "Netezza",
+      "description": "IBM Netezza / PureData connection",
+      "linked_service_template": null,
+      "notes": "Use Netezza linked service type"
+    },
+    "tGreenplumConnection": {
+      "fabric_type": "Greenplum",
+      "description": "Greenplum database connection",
+      "linked_service_template": null,
+      "notes": "Use Greenplum linked service type"
+    },
+    "tAS400Connection": {
+      "fabric_type": "Db2",
+      "description": "IBM AS/400 (DB2 for i) connection",
+      "linked_service_template": null,
+      "notes": "Use DB2 linked service with jt400 driver"
+    },
+    "tSAPHanaConnection": {
+      "fabric_type": "SapHana",
+      "description": "SAP HANA database connection",
+      "linked_service_template": null,
+      "notes": "Use SAP HANA linked service type"
+    },
+    "tImpalaConnection": {
+      "fabric_type": "NotSupported",
+      "description": "Impala connection — not natively supported",
+      "linked_service_template": null,
+      "notes": "Use JDBC in Spark notebook with Impala driver"
+    },
+    "tMQSeriesConnection": {
+      "fabric_type": "NotSupported",
+      "description": "IBM MQ Series connection",
+      "linked_service_template": null,
+      "notes": "Use pymqi Python library in notebook"
     }
   }
 }

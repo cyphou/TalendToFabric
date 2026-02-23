@@ -45,7 +45,10 @@ TalendToFabric/
 │       ├── etl_notebook.py         # Base PySpark ETL notebook template
 │       ├── incremental_load.py     # Incremental/CDC load pattern
 │       ├── lookup_pattern.py       # Lookup & join pattern
-│       ├── scd_type2.py            # SCD Type 2 pattern
+│       ├── scd_type1.py            # SCD Type 1 pattern (overwrite)
+│       ├── scd_type2.py            # SCD Type 2 pattern (history)
+│       ├── cdc_watermark.py        # CDC / high-watermark pattern
+│       ├── merge_upsert.py         # Merge/Upsert (all tDBOutput actions)
 │       └── common/
 │           ├── utils.py            # Shared utility functions
 │           └── config.py           # Configuration management
