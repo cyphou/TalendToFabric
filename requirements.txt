@@ -1,0 +1,19 @@
+# Top-level requirements — installs all dependencies for the full toolkit
+# For individual modules, see parser/, translator/, validation/, tests/
+
+# Core
+lxml>=4.9.0
+pandas>=2.0.0
+networkx>=3.0
+click>=8.0.0
+rich>=13.0.0
+Jinja2>=3.1.0
+
+# Validation (optional — only needed for post-migration validation)
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
+
+# Testing (optional — only needed to run the test suite)
+pytest>=7.0
+pytest-html>=3.2
+pytest-cov>=4.0

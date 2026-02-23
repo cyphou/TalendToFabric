@@ -61,6 +61,7 @@ stages:
         pip install -r parser/requirements.txt
         pip install -r translator/requirements.txt
         pip install -r validation/requirements.txt
+        pip install -r tests/requirements.txt
       displayName: 'Install dependencies'
 
     - script: |
@@ -69,10 +70,23 @@ stages:
         python -m py_compile parser/generate_inventory.py
         python -m py_compile translator/translate_to_adf.py
         python -m py_compile translator/translate_to_spark.py
+        python -m py_compile translator/translate_to_notebook.py
         python -m py_compile translator/sql_translator.py
         python -m py_compile validation/row_count_validation.py
         python -m py_compile validation/data_diff_validation.py
+        python -m py_compile validation/schema_validation.py
       displayName: 'Validate Python scripts'
+
+    - script: |
+        python -m pytest tests/ -q --tb=short --junitxml=$(Build.ArtifactStagingDirectory)/test-results.xml
+      displayName: 'Run test suite (423 tests)'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFiles: '$(Build.ArtifactStagingDirectory)/test-results.xml'
+        testRunTitle: 'TalendToFabric — Pytest'
+      condition: always()
+      displayName: 'Publish test results'
 
     - script: |
         python -c "

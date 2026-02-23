@@ -1,5 +1,11 @@
 # Talend to Microsoft Fabric Migration Project
 
+![Tests](https://img.shields.io/badge/tests-423_passed-brightgreen)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Dialects](https://img.shields.io/badge/SQL_dialects-7-orange)
+![Components](https://img.shields.io/badge/Talend_components-200%2B-purple)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 ## Overview
 
 This project provides a structured framework for migrating **Talend ETL jobs** to **Microsoft Fabric** (Data Factory Pipelines and/or Spark Notebooks). It includes tooling for inventory, analysis, automated translation, validation, and deployment.
@@ -9,12 +15,16 @@ This project provides a structured framework for migrating **Talend ETL jobs** t
 ```
 TalendToFabric/
 ├── README.md                       # This file
+├── LICENSE                         # MIT License
+├── CONTRIBUTING.md                 # Contribution guidelines
+├── CHANGELOG.md                    # Version history
+├── requirements.txt                # Top-level dependencies (all modules)
 ├── pytest.ini                      # Pytest configuration
 ├── docs/                           # Documentation & guides
 │   ├── migration-guide.md          # Step-by-step migration guide
 │   ├── component-mapping.md        # Talend component → Fabric mapping
 │   ├── architecture.md             # Target architecture in Fabric
-│   └── diagrams.md                 # 9 Mermaid diagrams (architecture, flow, mapping...)
+│   └── diagrams.md                 # 10 Mermaid diagrams (architecture, flow, mapping...)
 │
 ├── inventory/                      # Talend job inventory & analysis
 │   ├── talend_job_inventory.csv    # Master inventory of all Talend jobs
@@ -70,8 +80,10 @@ TalendToFabric/
 │       └── sample_test.json        # Sample validation test case
 │
 ├── tests/                          # Pytest test suite (423 tests)
+│   ├── __init__.py                 # Package marker
 │   ├── conftest.py                 # Shared fixtures & helpers
 │   ├── run_tests.py                # CLI test runner
+│   ├── requirements.txt            # Test-specific dependencies
 │   ├── fixtures/                   # 7 Talend .item test fixtures
 │   │   ├── simple_copy_job.item
 │   │   ├── transform_job.item
@@ -257,4 +269,4 @@ ELSE                                                             → Data Factor
 
 ## License
 
-Internal use — Microsoft proprietary.
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.

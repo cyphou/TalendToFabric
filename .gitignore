@@ -32,6 +32,9 @@ output_real/
 # Downloaded Talend project (large, re-downloadable)
 real_talend_project/
 
+# Misc binary assets (not part of migration toolkit)
+image.png
+
 # Temp files
 *.tmp
 *.bak
