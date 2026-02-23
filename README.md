@@ -68,21 +68,23 @@ TalendToFabric/
 │   └── test_cases/                 # Test case definitions
 │       └── sample_test.json        # Sample validation test case
 │
-├── tests/                          # Pytest test suite (299 tests)
+├── tests/                          # Pytest test suite (392 tests)
 │   ├── conftest.py                 # Shared fixtures & helpers
 │   ├── run_tests.py                # CLI test runner
-│   ├── fixtures/                   # 6 Talend .item test fixtures
+│   ├── fixtures/                   # 7 Talend .item test fixtures
 │   │   ├── simple_copy_job.item
 │   │   ├── transform_job.item
 │   │   ├── orchestration_job.item
 │   │   ├── custom_code_job.item
 │   │   ├── complex_etl_job.item
-│   │   └── file_transfer_job.item
+│   │   ├── file_transfer_job.item
+│   │   └── cdc_hash_job.item
 │   ├── test_parser.py              # 57 tests — parser & inventory
 │   ├── test_translate_to_adf.py    # 34 tests — ADF pipeline generation
 │   ├── test_translate_to_spark.py  # 43 tests — Spark notebook generation
 │   ├── test_sql_translator.py      # 26 tests — Oracle→PostgreSQL rules
 │   ├── test_sql_dialects.py        # 102 tests — SQL Server, MySQL, DB2, Teradata, Snowflake, Sybase
+│   ├── test_new_features.py        # 93 tests — Hash, CDC, schema, tMap, bigdata, templates
 │   ├── test_validation.py          # 20 tests — schema/row/data validators
 │   └── test_regression.py          # 17 tests — end-to-end & determinism
 │
@@ -157,18 +159,95 @@ cd deployment
 
 ## Migration Decision Matrix
 
-| Criteria | → Data Factory | → Spark Notebook |
-|---|---|---|
-| Simple source-to-target copy | ✅ | |
-| Complex transformations | | ✅ |
-| Lookup/Join patterns | ✅ (Data Flow) | ✅ |
-| Aggregations | ✅ (Data Flow) | ✅ |
-| Custom Java/Python code | | ✅ |
-| File processing (CSV, XML, JSON) | ✅ | ✅ |
-| Incremental/CDC loads | ✅ | ✅ |
-| SCD Type 2 | | ✅ |
-| Orchestration (parent jobs) | ✅ | |
-| Real-time/streaming | | ✅ |
+### Target Selection
+
+| Criteria | → Data Factory | → Spark Notebook | Notes |
+|---|:---:|:---:|---|
+| **Data Movement** | | | |
+| Simple source-to-target copy | ✅ | | Copy Activity |
+| Multi-source join/merge | | ✅ | Mapping Data Flow possible but Spark preferred |
+| Bulk load (tBulkExec variants) | ✅ | ✅ | ADF bulk insert or Spark JDBC batch |
+| Cross-database transfer | ✅ | ✅ | ADF if no transform; Spark if transform needed |
+| **Transformations** | | | |
+| Simple filtering / column mapping | ✅ (Data Flow) | ✅ | ADF Data Flow for low-code |
+| Complex tMap (multi-input, expressions) | | ✅ | Spark DataFrame joins + expressions |
+| Aggregations (tAggregateRow) | ✅ (Data Flow) | ✅ | |
+| Sorting / Dedup (tSortRow, tUniqRow) | ✅ (Data Flow) | ✅ | |
+| Lookup/Join patterns | ✅ (Data Flow) | ✅ | |
+| Hash in-memory lookup (tHashInput/Output) | | ✅ | Spark broadcast join |
+| Normalize / Denormalize | | ✅ | `explode()` / `collect_list()` |
+| Data Quality (tPatternCheck, tMatchPairing) | | ✅ | Custom PySpark logic |
+| XML / XSLT transforms | | ✅ | `spark-xml` + Python lxml |
+| **Change Data Capture** | | | |
+| CDC with watermark column | ✅ | ✅ | ADF tumbling window or Spark watermark template |
+| Database-native CDC (tOracleCDC, tMysqlCDC…) | | ✅ | Spark + Delta MERGE (see `cdc_watermark.py`) |
+| SCD Type 1 (overwrite) | ✅ (Data Flow) | ✅ | Spark Delta MERGE (see `scd_type1.py`) |
+| SCD Type 2 (history) | | ✅ | Spark Delta MERGE (see `scd_type2.py`) |
+| **Merge / Upsert** | | | |
+| INSERT only | ✅ | ✅ | |
+| UPDATE / UPSERT | ✅ (Stored Proc) | ✅ | Spark Delta MERGE (see `merge_upsert.py`) |
+| DELETE / DELETE_INSERT | | ✅ | Spark Delta MERGE |
+| **Code & Logic** | | | |
+| Custom Java / Python code | | ✅ | tJava/tJavaRow/tGroovy → PySpark |
+| Stored procedure calls (tSP variants) | ✅ (Stored Proc) | ✅ | ADF Stored Procedure Activity |
+| DML execution (tDBRow / vendor Row) | ✅ (Stored Proc) | ✅ | `spark.read.jdbc` with `sessionInitStatement` |
+| ELT / Pushdown (tELTMap…) | ✅ | ✅ | ADF Script Activity or Spark `spark.sql()` |
+| **Orchestration** | | | |
+| Parent/child jobs (tRunJob) | ✅ | | ADF Execute Pipeline |
+| Pre/Post job steps (tPreJob/tPostJob) | ✅ | | ADF pipeline activities |
+| Looping (tLoop, tForEach) | ✅ | ✅ | ADF ForEach / Spark Python loop |
+| Error handling (tLogCatcher, tCatch) | ✅ | ✅ | ADF On Failure path / try-except |
+| **File & Protocol** | | | |
+| File processing (CSV, Excel, XML, JSON) | ✅ | ✅ | |
+| SFTP / FTP transfers | ✅ | | ADF Copy with SFTP connector |
+| File archive / delete / move | ✅ | ✅ | ADF Delete Activity / Spark `dbutils.fs` |
+| REST / SOAP / Web Service calls | ✅ | ✅ | ADF Web Activity / Spark `requests` |
+| **Messaging** | | | |
+| Kafka / Event Hub ingestion | | ✅ | Spark Structured Streaming |
+| JMS / MQ Series | | ✅ | Custom connector in Spark |
+| Real-time / streaming | | ✅ | Spark Structured Streaming |
+| **Cloud & NoSQL** | | | |
+| Azure Blob / ADLS / S3 / GCS | ✅ | ✅ | |
+| MongoDB / Cosmos DB / Cassandra | ✅ | ✅ | ADF connector or Spark connector |
+| Elasticsearch / Redis / HBase | | ✅ | Spark connector |
+| **Big Data / Hadoop** | | | |
+| Sqoop (tSqoopImport/Export) | ✅ | ✅ | Deprecated → ADF Copy or Spark JDBC |
+| Hive / Impala | | ✅ | Spark `spark.sql()` on Lakehouse |
+| Pig / MapReduce | | ✅ | Rewrite as PySpark |
+| **Multi-Source SQL Dialects** | | | |
+| Oracle → PostgreSQL | ✅ | ✅ | 33 translation rules |
+| SQL Server → PostgreSQL | ✅ | ✅ | 38 translation rules |
+| MySQL → PostgreSQL | ✅ | ✅ | 34 translation rules |
+| DB2 → PostgreSQL | ✅ | ✅ | 27 translation rules |
+| Teradata → PostgreSQL | ✅ | ✅ | 21 translation rules |
+| Snowflake → PostgreSQL | ✅ | ✅ | 23 translation rules |
+| Sybase → PostgreSQL | ✅ | ✅ | 21 translation rules |
+
+### Quick Decision Rule
+
+```
+IF   job has custom code (tJava, tJavaRow, tGroovy, tPythonRow)  → Spark
+ELIF job has SCD Type 2 or complex CDC                           → Spark
+ELIF job has streaming / Kafka / real-time                       → Spark
+ELIF job is orchestration-only (tRunJob, tPreJob/PostJob)        → Data Factory
+ELIF job is simple copy (≤ 2 transforms)                         → Data Factory
+ELIF job has Data Quality / Hash / Normalize                     → Spark
+ELSE                                                             → Data Factory (default)
+```
+
+## Test Coverage
+
+| Test Module | Tests | Scope |
+|---|---:|---|
+| `test_parser.py` | 57 | Parser, inventory, metadata |
+| `test_translate_to_adf.py` | 34 | ADF pipeline generation |
+| `test_translate_to_spark.py` | 43 | Spark notebook generation |
+| `test_sql_translator.py` | 26 | Oracle → PostgreSQL rules |
+| `test_sql_dialects.py` | 102 | 6 additional SQL dialects |
+| `test_new_features.py` | 93 | Hash, CDC, schema, tMap, bigdata, templates |
+| `test_validation.py` | 20 | Schema / row / data validators |
+| `test_regression.py` | 17 | End-to-end & determinism |
+| **Total** | **392** | |
 
 ## License
 
