@@ -1,0 +1,325 @@
+{
+  "description": "Maps Talend connection types to Fabric linked services / connections",
+  "version": "2.0",
+  "mappings": {
+    "_comment_databases": "=== DATABASE CONNECTIONS ===",
+    "tOracleConnection": {
+      "fabric_type": "AzurePostgreSql",
+      "description": "Oracle connections — redirected to Azure PostgreSQL (post database migration)",
+      "linked_service_template": "linked_services/postgresql.json",
+      "notes": "Update SQL syntax from Oracle to PostgreSQL"
+    },
+    "tPostgresqlConnection": {
+      "fabric_type": "AzurePostgreSql",
+      "description": "Direct mapping to Azure Database for PostgreSQL",
+      "linked_service_template": "linked_services/postgresql.json",
+      "notes": "Update host to Azure PostgreSQL endpoint"
+    },
+    "tMSSqlConnection": {
+      "fabric_type": "SqlServer",
+      "description": "SQL Server / Azure SQL Database connection",
+      "linked_service_template": null,
+      "notes": "Use SqlServer linked service type"
+    },
+    "tMysqlConnection": {
+      "fabric_type": "AzureMySql",
+      "description": "Azure Database for MySQL",
+      "linked_service_template": null,
+      "notes": "Create MySQL linked service template if needed"
+    },
+    "tDB2Connection": {
+      "fabric_type": "Db2",
+      "description": "IBM DB2 database connection",
+      "linked_service_template": null,
+      "notes": "Use DB2 linked service type"
+    },
+    "tTeradataConnection": {
+      "fabric_type": "Teradata",
+      "description": "Teradata database connection",
+      "linked_service_template": null,
+      "notes": "Use Teradata linked service type"
+    },
+    "tSybaseConnection": {
+      "fabric_type": "Odbc",
+      "description": "Sybase / SAP ASE database connection",
+      "linked_service_template": null,
+      "notes": "Use ODBC linked service with Sybase driver"
+    },
+    "tRedshiftConnection": {
+      "fabric_type": "AmazonRedshift",
+      "description": "Amazon Redshift connection",
+      "linked_service_template": null,
+      "notes": "Use Redshift linked service type"
+    },
+    "tSnowflakeConnection": {
+      "fabric_type": "Snowflake",
+      "description": "Snowflake connection",
+      "linked_service_template": null,
+      "notes": "Use Snowflake linked service type"
+    },
+    "tHiveConnection": {
+      "fabric_type": "NotApplicable_NativeToSpark",
+      "description": "Hive connection — native to Spark/Lakehouse",
+      "linked_service_template": null,
+      "notes": "Use direct Spark SQL against Lakehouse tables"
+    },
+    "tDBConnection": {
+      "fabric_type": "Odbc",
+      "description": "Generic JDBC/ODBC connection",
+      "linked_service_template": null,
+      "notes": "Use ODBC linked service with appropriate driver"
+    },
+    "tSQLiteConnection": {
+      "fabric_type": "NotSupported",
+      "description": "SQLite — no direct Fabric support",
+      "linked_service_template": null,
+      "notes": "Migrate data to Azure PostgreSQL or Lakehouse"
+    },
+    "tInformixConnection": {
+      "fabric_type": "Informix",
+      "description": "IBM Informix connection",
+      "linked_service_template": null,
+      "notes": "Use Informix linked service type"
+    },
+
+    "_comment_cloud_storage": "=== CLOUD STORAGE CONNECTIONS ===",
+    "tS3Connection": {
+      "fabric_type": "AmazonS3",
+      "description": "AWS S3 connection",
+      "linked_service_template": null,
+      "notes": "Use S3 linked service or OneLake shortcut to S3"
+    },
+    "tAzureBlobConnection": {
+      "fabric_type": "AzureBlobStorage",
+      "description": "Azure Blob Storage connection",
+      "linked_service_template": null,
+      "notes": "Use OneLake shortcut to Blob Storage where possible"
+    },
+    "tAzureDataLakeConnection": {
+      "fabric_type": "AzureDataLakeStore",
+      "description": "Azure Data Lake Storage Gen2",
+      "linked_service_template": null,
+      "notes": "Use OneLake shortcut to ADLS Gen2"
+    },
+    "tGCSConnection": {
+      "fabric_type": "GoogleCloudStorage",
+      "description": "Google Cloud Storage connection",
+      "linked_service_template": null,
+      "notes": "Use GCS linked service or OneLake shortcut"
+    },
+    "tHDFSConnection": {
+      "fabric_type": "NotApplicable",
+      "description": "HDFS — not applicable in Fabric",
+      "linked_service_template": null,
+      "notes": "Use OneLake (ADLS Gen2 based) instead"
+    },
+
+    "_comment_file_transfer": "=== FILE TRANSFER CONNECTIONS ===",
+    "tSFTPConnection": {
+      "fabric_type": "Sftp",
+      "description": "SFTP connection for file transfer",
+      "linked_service_template": null,
+      "notes": "Use Copy Activity with SFTP connector"
+    },
+    "tSFTPGet": {
+      "fabric_type": "Sftp",
+      "description": "SFTP download",
+      "linked_service_template": null,
+      "notes": "Use Copy Activity with SFTP connector"
+    },
+    "tFTPConnection": {
+      "fabric_type": "FtpServer",
+      "description": "FTP connection for file transfer",
+      "linked_service_template": null,
+      "notes": "Use Copy Activity with FTP connector"
+    },
+    "tFTPGet": {
+      "fabric_type": "FtpServer",
+      "description": "FTP download",
+      "linked_service_template": null,
+      "notes": "Use Copy Activity with FTP connector"
+    },
+
+    "_comment_files": "=== FILE SYSTEM CONNECTIONS ===",
+    "tFileInputDelimited": {
+      "fabric_type": "Lakehouse",
+      "description": "Local file system — map to Lakehouse Files",
+      "linked_service_template": "linked_services/lakehouse.json",
+      "notes": "Upload files to Lakehouse or use OneLake shortcut"
+    },
+    "tFileInputExcel": {
+      "fabric_type": "Lakehouse",
+      "description": "Excel file — map to Lakehouse Files",
+      "linked_service_template": "linked_services/lakehouse.json",
+      "notes": "Upload Excel files to Lakehouse"
+    },
+    "tFileInputJSON": {
+      "fabric_type": "Lakehouse",
+      "description": "JSON file — map to Lakehouse Files",
+      "linked_service_template": "linked_services/lakehouse.json",
+      "notes": "Upload JSON files to Lakehouse"
+    },
+    "tFileInputXML": {
+      "fabric_type": "Lakehouse",
+      "description": "XML file — map to Lakehouse Files",
+      "linked_service_template": "linked_services/lakehouse.json",
+      "notes": "Upload XML files to Lakehouse"
+    },
+    "tFileInputParquet": {
+      "fabric_type": "Lakehouse",
+      "description": "Parquet file — native to Lakehouse",
+      "linked_service_template": "linked_services/lakehouse.json",
+      "notes": "Parquet is the preferred format in Lakehouse"
+    },
+    "tFileInputAvro": {
+      "fabric_type": "Lakehouse",
+      "description": "Avro file — supported in Lakehouse",
+      "linked_service_template": "linked_services/lakehouse.json",
+      "notes": "Upload Avro files to Lakehouse"
+    },
+
+    "_comment_api": "=== API & PROTOCOL CONNECTIONS ===",
+    "tRESTClient": {
+      "fabric_type": "RestService",
+      "description": "REST API connection",
+      "linked_service_template": null,
+      "notes": "Use Web Activity or Copy Activity with REST connector"
+    },
+    "tHTTPConnection": {
+      "fabric_type": "HttpServer",
+      "description": "HTTP connection",
+      "linked_service_template": null,
+      "notes": "Use HTTP linked service type"
+    },
+    "tSOAPConnection": {
+      "fabric_type": "RestService",
+      "description": "SOAP web service connection",
+      "linked_service_template": null,
+      "notes": "Use Web Activity with SOAP XML payloads"
+    },
+    "tSalesforceConnection": {
+      "fabric_type": "Salesforce",
+      "description": "Salesforce CRM connection",
+      "linked_service_template": null,
+      "notes": "Use Salesforce connector in Data Factory"
+    },
+    "tSAPConnection": {
+      "fabric_type": "SapTable",
+      "description": "SAP ERP connection",
+      "linked_service_template": null,
+      "notes": "Use SAP Table or SAP BW linked service"
+    },
+    "tSAPBWConnection": {
+      "fabric_type": "SapBw",
+      "description": "SAP BW connection",
+      "linked_service_template": null,
+      "notes": "Use SAP BW linked service type"
+    },
+    "tLDAPConnection": {
+      "fabric_type": "NotSupported",
+      "description": "LDAP connection — not natively supported",
+      "linked_service_template": null,
+      "notes": "Use python-ldap in Spark notebook"
+    },
+    "tODataConnection": {
+      "fabric_type": "OData",
+      "description": "OData protocol connection",
+      "linked_service_template": null,
+      "notes": "Use OData linked service type"
+    },
+    "tServiceNowConnection": {
+      "fabric_type": "ServiceNow",
+      "description": "ServiceNow connection",
+      "linked_service_template": null,
+      "notes": "Use ServiceNow connector in Data Factory"
+    },
+
+    "_comment_nosql": "=== NOSQL & DOCUMENT DB CONNECTIONS ===",
+    "tMongoDBConnection": {
+      "fabric_type": "CosmosDb",
+      "description": "MongoDB connection — map to Azure Cosmos DB for MongoDB",
+      "linked_service_template": null,
+      "notes": "Consider Azure Cosmos DB for MongoDB API. Cosmos DB provides elastic scale, multi-region writes, and low-latency guarantees."
+    },
+    "tCassandraConnection": {
+      "fabric_type": "Cassandra",
+      "description": "Cassandra connection",
+      "linked_service_template": null,
+      "notes": "Use Cassandra linked service or Cosmos DB Cassandra API"
+    },
+    "tCosmosDBConnection": {
+      "fabric_type": "CosmosDb",
+      "description": "Azure Cosmos DB SQL API connection",
+      "linked_service_template": null,
+      "notes": "Reuse singleton CosmosClient. Handle 429 with retry-after. Log diagnostics on high latency."
+    },
+    "tCouchDBConnection": {
+      "fabric_type": "Couchbase",
+      "description": "CouchDB / Couchbase connection",
+      "linked_service_template": null,
+      "notes": "Use Couchbase linked service or REST API"
+    },
+    "tNeo4jConnection": {
+      "fabric_type": "NotSupported",
+      "description": "Neo4j graph database — not natively supported",
+      "linked_service_template": null,
+      "notes": "Use neo4j Python driver in Spark notebook"
+    },
+    "tDynamoDBConnection": {
+      "fabric_type": "NotSupported",
+      "description": "DynamoDB — not natively supported",
+      "linked_service_template": null,
+      "notes": "Use boto3 in Spark notebook"
+    },
+    "tElasticsearchConnection": {
+      "fabric_type": "NotSupported",
+      "description": "Elasticsearch — not natively supported",
+      "linked_service_template": null,
+      "notes": "Use elasticsearch-py in Spark notebook"
+    },
+    "tHBaseConnection": {
+      "fabric_type": "NotApplicable",
+      "description": "HBase — not applicable in Fabric",
+      "linked_service_template": null,
+      "notes": "Migrate to Lakehouse Delta tables"
+    },
+    "tRedisConnection": {
+      "fabric_type": "NotSupported",
+      "description": "Redis — not natively supported",
+      "linked_service_template": null,
+      "notes": "Use redis Python library in Spark notebook"
+    },
+
+    "_comment_messaging": "=== MESSAGING & STREAMING CONNECTIONS ===",
+    "tKafkaConnection": {
+      "fabric_type": "EventHub",
+      "description": "Kafka connection — map to Azure Event Hub (Kafka protocol compatible)",
+      "linked_service_template": null,
+      "notes": "Event Hub supports Kafka protocol natively. Or use Spark Structured Streaming."
+    },
+    "tJMSConnection": {
+      "fabric_type": "NotSupported",
+      "description": "JMS — not natively supported",
+      "linked_service_template": null,
+      "notes": "Use stomp or custom Python connector in notebook"
+    },
+    "tActiveMQConnection": {
+      "fabric_type": "NotSupported",
+      "description": "ActiveMQ — not natively supported",
+      "linked_service_template": null,
+      "notes": "Use stomp Python library in notebook"
+    },
+    "tRabbitMQConnection": {
+      "fabric_type": "NotSupported",
+      "description": "RabbitMQ — not natively supported",
+      "linked_service_template": null,
+      "notes": "Use pika Python library in notebook"
+    },
+    "tAzureEventHubConnection": {
+      "fabric_type": "EventHub",
+      "description": "Azure Event Hub connection",
+      "linked_service_template": null,
+      "notes": "Native Event Hub support in Fabric"
+    }
+  }
+}

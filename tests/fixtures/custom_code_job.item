@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fixture: Custom code job — tJava, tJavaRow, tJavaFlex with tMap -->
+<talendfile:ProcessType xmlns:talendfile="platform:/resource/org.talend.model/model/TalendFile.xsd"
+                        xmlns:xmi="http://www.omg.org/XMI">
+  <node componentName="tFixedFlowInput" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tFixedFlowInput_1"/>
+    <elementParameter name="NB_ROWS" value="100"/>
+  </node>
+  <node componentName="tJava" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tJava_1"/>
+    <elementParameter name="CODE" value="System.out.println(&quot;Starting batch processing...&quot;);"/>
+  </node>
+  <node componentName="tJavaRow" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tJavaRow_1"/>
+    <elementParameter name="CODE" value="output_row.result = input_row.value.toUpperCase().trim();"/>
+  </node>
+  <node componentName="tJavaFlex" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tJavaFlex_1"/>
+    <elementParameter name="CODE_START" value="int counter = 0;"/>
+    <elementParameter name="CODE_MAIN" value="counter++; output_row.seq = counter;"/>
+    <elementParameter name="CODE_END" value="System.out.println(&quot;Processed &quot; + counter + &quot; rows&quot;);"/>
+  </node>
+  <node componentName="tLogRow" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tLogRow_1"/>
+  </node>
+  <connection source="tJava_1" target="tFixedFlowInput_1" connectorName="SUBJOB_OK" lineStyle="1" label="ok"/>
+  <connection source="tFixedFlowInput_1" target="tJavaRow_1" connectorName="FLOW" lineStyle="0" label="row1"/>
+  <connection source="tJavaRow_1" target="tJavaFlex_1" connectorName="FLOW" lineStyle="0" label="row2"/>
+  <connection source="tJavaFlex_1" target="tLogRow_1" connectorName="FLOW" lineStyle="0" label="row3"/>
+</talendfile:ProcessType>

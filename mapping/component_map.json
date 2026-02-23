@@ -1,0 +1,1529 @@
+{
+  "description": "Maps Talend components to their Fabric Data Factory / Spark equivalents",
+  "version": "2.0",
+  "mappings": {
+    "_comment_db_inputs": "=== DATABASE INPUT COMPONENTS ===",
+    "tOracleInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "OracleSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Oracle source — in Oracle→PostgreSQL migration, replace with PostgreSQL source"
+    },
+    "tPostgresqlInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "AzurePostgreSqlSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Direct mapping to Azure PostgreSQL source"
+    },
+    "tMSSqlInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "SqlServerSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "SQL Server source"
+    },
+    "tMysqlInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "MySqlSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "MySQL source"
+    },
+    "tDB2Input": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "Db2Source",
+      "spark": "spark.read.jdbc()",
+      "notes": "DB2 source"
+    },
+    "tTeradataInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "TeradataSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Teradata source"
+    },
+    "tSybaseInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "SapBwSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Sybase / SAP ASE source"
+    },
+    "tRedshiftInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "AmazonRedshiftSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Redshift source"
+    },
+    "tSnowflakeInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "SnowflakeSource",
+      "spark": "spark.read.format('snowflake')",
+      "notes": "Snowflake source"
+    },
+    "tHiveInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "HiveSource",
+      "spark": "spark.sql('SELECT ...')",
+      "notes": "Hive source — native to Spark"
+    },
+    "tDBInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "OdbcSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Generic DB input via JDBC/ODBC"
+    },
+    "tSQLiteInput": {
+      "category": "db_input",
+      "data_factory": "NotSupported",
+      "spark": "spark.read.jdbc()",
+      "notes": "SQLite — use JDBC driver"
+    },
+    "tInformixInput": {
+      "category": "db_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "InformixSource",
+      "spark": "spark.read.jdbc()",
+      "notes": "Informix source"
+    },
+
+    "_comment_db_outputs": "=== DATABASE OUTPUT COMPONENTS ===",
+    "tOracleOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "OracleSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Oracle target — replace with PostgreSQL or Lakehouse target"
+    },
+    "tPostgresqlOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "AzurePostgreSqlSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Direct mapping to Azure PostgreSQL sink"
+    },
+    "tMSSqlOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "SqlServerSink",
+      "spark": "df.write.jdbc()",
+      "notes": "SQL Server sink"
+    },
+    "tMysqlOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "MySqlSink",
+      "spark": "df.write.jdbc()",
+      "notes": "MySQL sink"
+    },
+    "tDB2Output": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "Db2Sink",
+      "spark": "df.write.jdbc()",
+      "notes": "DB2 sink"
+    },
+    "tTeradataOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "TeradataSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Teradata sink"
+    },
+    "tRedshiftOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "AmazonRedshiftSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Redshift sink"
+    },
+    "tSnowflakeOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "SnowflakeSink",
+      "spark": "df.write.format('snowflake')",
+      "notes": "Snowflake sink"
+    },
+    "tHiveOutput": {
+      "category": "db_output",
+      "data_factory": "NotApplicable",
+      "spark": "df.write.saveAsTable()",
+      "notes": "Hive output — native to Spark Lakehouse"
+    },
+    "tDBOutput": {
+      "category": "db_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "OdbcSink",
+      "spark": "df.write.jdbc()",
+      "notes": "Generic DB output via JDBC/ODBC"
+    },
+
+    "_comment_db_ops": "=== DATABASE OPERATION COMPONENTS ===",
+    "tOracleConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Oracle",
+      "spark": "JDBC connection properties",
+      "notes": "Oracle connection definition"
+    },
+    "tPostgresqlConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_AzurePostgreSQL",
+      "spark": "JDBC connection properties",
+      "notes": "PostgreSQL connection definition"
+    },
+    "tMSSqlConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_SqlServer",
+      "spark": "JDBC connection properties",
+      "notes": "SQL Server connection definition"
+    },
+    "tMysqlConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_MySql",
+      "spark": "JDBC connection properties",
+      "notes": "MySQL connection definition"
+    },
+    "tDBConnection": {
+      "category": "db_connection",
+      "data_factory": "LinkedService_Odbc",
+      "spark": "JDBC connection properties",
+      "notes": "Generic DB connection"
+    },
+    "tOracleCommit": {
+      "category": "db_operation",
+      "data_factory": "AutoCommit",
+      "spark": "Explicit commit / auto in Spark",
+      "notes": "Transaction commit"
+    },
+    "tDBCommit": {
+      "category": "db_operation",
+      "data_factory": "AutoCommit",
+      "spark": "Explicit commit / auto in Spark",
+      "notes": "Transaction commit"
+    },
+    "tOracleRollback": {
+      "category": "db_operation",
+      "data_factory": "ErrorHandler",
+      "spark": "try-except with rollback",
+      "notes": "Transaction rollback"
+    },
+    "tDBRollback": {
+      "category": "db_operation",
+      "data_factory": "ErrorHandler",
+      "spark": "try-except with rollback",
+      "notes": "Transaction rollback"
+    },
+    "tOracleSP": {
+      "category": "db_operation",
+      "data_factory": "StoredProcedureActivity",
+      "spark": "spark.sql('CALL ...')",
+      "notes": "Stored procedure execution"
+    },
+    "tDBSP": {
+      "category": "db_operation",
+      "data_factory": "StoredProcedureActivity",
+      "spark": "spark.sql('CALL ...')",
+      "notes": "Stored procedure execution"
+    },
+    "tDBRow": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity",
+      "spark": "spark.sql('INSERT/UPDATE/DELETE ...')",
+      "notes": "Execute arbitrary SQL statement"
+    },
+    "tDBBulkExec": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.jdbc(batchsize=N)",
+      "notes": "Bulk data loading"
+    },
+    "tOracleBulkExec": {
+      "category": "db_operation",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "df.write.jdbc(batchsize=N)",
+      "notes": "Oracle bulk data loading"
+    },
+    "tCreateTable": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity_DDL",
+      "spark": "spark.sql('CREATE TABLE ...')",
+      "notes": "DDL create table"
+    },
+    "tDropTable": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity_DDL",
+      "spark": "spark.sql('DROP TABLE ...')",
+      "notes": "DDL drop table"
+    },
+    "tAlterTable": {
+      "category": "db_operation",
+      "data_factory": "ScriptActivity_DDL",
+      "spark": "spark.sql('ALTER TABLE ...')",
+      "notes": "DDL alter table"
+    },
+    "tDBTableList": {
+      "category": "db_operation",
+      "data_factory": "GetMetadataActivity",
+      "spark": "spark.catalog.listTables()",
+      "notes": "List database tables"
+    },
+    "tDBColumnList": {
+      "category": "db_operation",
+      "data_factory": "GetMetadataActivity",
+      "spark": "spark.catalog.listColumns()",
+      "notes": "List table columns"
+    },
+    "tOracleClose": {
+      "category": "db_operation",
+      "data_factory": "Automatic",
+      "spark": "Connection auto-close",
+      "notes": "Close connection"
+    },
+    "tDBClose": {
+      "category": "db_operation",
+      "data_factory": "Automatic",
+      "spark": "Connection auto-close",
+      "notes": "Close connection"
+    },
+    "tDBValidation": {
+      "category": "db_operation",
+      "data_factory": "GetMetadataActivity",
+      "spark": "spark.catalog.tableExists()",
+      "notes": "Validate table existence"
+    },
+
+    "_comment_file_inputs": "=== FILE INPUT COMPONENTS ===",
+    "tFileInputDelimited": {
+      "category": "file_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "DelimitedTextSource",
+      "spark": "spark.read.csv()",
+      "notes": "CSV file input"
+    },
+    "tFileInputExcel": {
+      "category": "file_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "ExcelSource",
+      "spark": "spark.read.format('com.crealytics.spark.excel')",
+      "notes": "Excel file input"
+    },
+    "tFileInputJSON": {
+      "category": "file_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "JsonSource",
+      "spark": "spark.read.json()",
+      "notes": "JSON file input"
+    },
+    "tFileInputParquet": {
+      "category": "file_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "ParquetSource",
+      "spark": "spark.read.parquet()",
+      "notes": "Parquet file input"
+    },
+    "tFileInputXML": {
+      "category": "file_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "XmlSource",
+      "spark": "spark.read.format('xml')",
+      "notes": "XML file input"
+    },
+    "tFileInputAvro": {
+      "category": "file_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "AvroSource",
+      "spark": "spark.read.format('avro')",
+      "notes": "Avro file input"
+    },
+    "tFileInputORC": {
+      "category": "file_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "OrcSource",
+      "spark": "spark.read.orc()",
+      "notes": "ORC file input"
+    },
+    "tFileInputPositional": {
+      "category": "file_input",
+      "data_factory": "CopyActivity_Custom",
+      "spark": "spark.read.text() + substring parsing",
+      "notes": "Fixed-width file — requires custom column extraction"
+    },
+    "tFileInputRegex": {
+      "category": "file_input",
+      "data_factory": "NotSupported",
+      "spark": "spark.read.text() + regexp_extract()",
+      "notes": "Regex-based parsing — Spark only"
+    },
+    "tFileInputFullRow": {
+      "category": "file_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "BinarySource",
+      "spark": "spark.read.text()",
+      "notes": "Read entire row as single field"
+    },
+    "tFileInputRaw": {
+      "category": "file_input",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "BinarySource",
+      "spark": "spark.sparkContext.binaryFiles()",
+      "notes": "Raw binary file input"
+    },
+    "tFileInputLDIF": {
+      "category": "file_input",
+      "data_factory": "NotSupported",
+      "spark": "Custom Python parser",
+      "notes": "LDIF file — requires custom parsing"
+    },
+
+    "_comment_file_outputs": "=== FILE OUTPUT COMPONENTS ===",
+    "tFileOutputDelimited": {
+      "category": "file_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "DelimitedTextSink",
+      "spark": "df.write.csv()",
+      "notes": "CSV file output"
+    },
+    "tFileOutputExcel": {
+      "category": "file_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "ExcelSink",
+      "spark": "df.write.format('com.crealytics.spark.excel')",
+      "notes": "Excel file output"
+    },
+    "tFileOutputJSON": {
+      "category": "file_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "JsonSink",
+      "spark": "df.write.json()",
+      "notes": "JSON file output"
+    },
+    "tFileOutputParquet": {
+      "category": "file_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "ParquetSink",
+      "spark": "df.write.parquet()",
+      "notes": "Parquet file output"
+    },
+    "tFileOutputXML": {
+      "category": "file_output",
+      "data_factory": "DataFlow_XmlSink",
+      "spark": "df.write.format('xml')",
+      "notes": "XML file output"
+    },
+    "tFileOutputAvro": {
+      "category": "file_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "AvroSink",
+      "spark": "df.write.format('avro')",
+      "notes": "Avro file output"
+    },
+    "tFileOutputORC": {
+      "category": "file_output",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "OrcSink",
+      "spark": "df.write.orc()",
+      "notes": "ORC file output"
+    },
+    "tFileOutputPositional": {
+      "category": "file_output",
+      "data_factory": "NotSupported",
+      "spark": "format_string() + df.write.text()",
+      "notes": "Fixed-width output — custom formatting"
+    },
+
+    "_comment_cloud_storage": "=== CLOUD STORAGE COMPONENTS ===",
+    "tS3Connection": {
+      "category": "cloud_storage",
+      "data_factory": "LinkedService_AmazonS3",
+      "spark": "S3A configuration",
+      "notes": "AWS S3 connection"
+    },
+    "tS3Input": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "AmazonS3Source",
+      "spark": "spark.read.csv('s3a://...')",
+      "notes": "Read from S3"
+    },
+    "tS3Output": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "AmazonS3Sink",
+      "spark": "df.write.csv('s3a://...')",
+      "notes": "Write to S3"
+    },
+    "tS3Get": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "spark": "boto3.download_file()",
+      "notes": "Download from S3"
+    },
+    "tS3Put": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "spark": "boto3.upload_file()",
+      "notes": "Upload to S3"
+    },
+    "tAzureBlobInput": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "AzureBlobStorageSource",
+      "spark": "spark.read.csv('wasbs://...')",
+      "notes": "Read from Azure Blob"
+    },
+    "tAzureBlobOutput": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "AzureBlobStorageSink",
+      "spark": "df.write.csv('wasbs://...')",
+      "notes": "Write to Azure Blob"
+    },
+    "tAzureBlobConnection": {
+      "category": "cloud_storage",
+      "data_factory": "LinkedService_AzureBlobStorage",
+      "spark": "wasbs:// or abfss:// configuration",
+      "notes": "Azure Blob connection"
+    },
+    "tAzureDataLakeInput": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "AzureDataLakeStoreSource",
+      "spark": "spark.read.csv('abfss://...')",
+      "notes": "Read from ADLS"
+    },
+    "tAzureDataLakeOutput": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "AzureDataLakeStoreSink",
+      "spark": "df.write.csv('abfss://...')",
+      "notes": "Write to ADLS"
+    },
+    "tGCSInput": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "GoogleCloudStorageSource",
+      "spark": "spark.read.csv('gs://...')",
+      "notes": "Read from Google Cloud Storage"
+    },
+    "tGCSOutput": {
+      "category": "cloud_storage",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "GoogleCloudStorageSink",
+      "spark": "df.write.csv('gs://...')",
+      "notes": "Write to Google Cloud Storage"
+    },
+    "tHDFSInput": {
+      "category": "cloud_storage",
+      "data_factory": "NotApplicable",
+      "spark": "spark.read.csv('hdfs://...')",
+      "notes": "Read from HDFS"
+    },
+    "tHDFSOutput": {
+      "category": "cloud_storage",
+      "data_factory": "NotApplicable",
+      "spark": "df.write.csv('hdfs://...')",
+      "notes": "Write to HDFS"
+    },
+
+    "_comment_nosql": "=== NOSQL / DOCUMENT DB COMPONENTS ===",
+    "tMongoDBInput": {
+      "category": "nosql",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "MongoDbSource",
+      "spark": "spark.read.format('mongo')",
+      "notes": "MongoDB source"
+    },
+    "tMongoDBOutput": {
+      "category": "nosql",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "MongoDbSink",
+      "spark": "df.write.format('mongo')",
+      "notes": "MongoDB sink"
+    },
+    "tMongoDBConnection": {
+      "category": "nosql",
+      "data_factory": "LinkedService_MongoDB",
+      "spark": "MongoDB connection string",
+      "notes": "MongoDB connection"
+    },
+    "tCassandraInput": {
+      "category": "nosql",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "CassandraSource",
+      "spark": "spark.read.format('org.apache.spark.sql.cassandra')",
+      "notes": "Cassandra source"
+    },
+    "tCassandraOutput": {
+      "category": "nosql",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "CassandraSink",
+      "spark": "df.write.format('org.apache.spark.sql.cassandra')",
+      "notes": "Cassandra sink"
+    },
+    "tCosmosDBInput": {
+      "category": "nosql",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "CosmosDbSqlApiSource",
+      "spark": "spark.read.format('cosmos.oltp')",
+      "notes": "Azure Cosmos DB source — recommended for AI/chat/RAG workloads"
+    },
+    "tCosmosDBOutput": {
+      "category": "nosql",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "CosmosDbSqlApiSink",
+      "spark": "df.write.format('cosmos.oltp')",
+      "notes": "Azure Cosmos DB sink — use singleton CosmosClient, handle 429 with retry-after"
+    },
+    "tCouchDBInput": {
+      "category": "nosql",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "CouchbaseSource",
+      "spark": "requests + spark.createDataFrame()",
+      "notes": "CouchDB source"
+    },
+    "tNeo4jInput": {
+      "category": "nosql",
+      "data_factory": "NotSupported",
+      "spark": "neo4j Python driver",
+      "notes": "Neo4j graph DB — requires custom connector"
+    },
+    "tNeo4jOutput": {
+      "category": "nosql",
+      "data_factory": "NotSupported",
+      "spark": "neo4j Python driver",
+      "notes": "Neo4j graph DB — requires custom connector"
+    },
+    "tDynamoDBInput": {
+      "category": "nosql",
+      "data_factory": "NotSupported",
+      "spark": "boto3 + spark.createDataFrame()",
+      "notes": "DynamoDB — requires custom connector"
+    },
+    "tDynamoDBOutput": {
+      "category": "nosql",
+      "data_factory": "NotSupported",
+      "spark": "boto3 DynamoDB client",
+      "notes": "DynamoDB — requires custom connector"
+    },
+    "tElasticsearchInput": {
+      "category": "nosql",
+      "data_factory": "NotSupported",
+      "spark": "elasticsearch-spark connector",
+      "notes": "Elasticsearch source"
+    },
+    "tElasticsearchOutput": {
+      "category": "nosql",
+      "data_factory": "NotSupported",
+      "spark": "elasticsearch-spark connector",
+      "notes": "Elasticsearch sink"
+    },
+    "tHBaseInput": {
+      "category": "nosql",
+      "data_factory": "NotApplicable",
+      "spark": "spark.read.format('org.apache.hadoop.hbase.spark')",
+      "notes": "HBase source"
+    },
+    "tRedisInput": {
+      "category": "nosql",
+      "data_factory": "NotSupported",
+      "spark": "redis Python library",
+      "notes": "Redis source"
+    },
+    "tRedisOutput": {
+      "category": "nosql",
+      "data_factory": "NotSupported",
+      "spark": "redis Python library",
+      "notes": "Redis sink"
+    },
+
+    "_comment_messaging": "=== MESSAGING & STREAMING COMPONENTS ===",
+    "tKafkaInput": {
+      "category": "messaging",
+      "data_factory": "NotSupported_UseEventHub",
+      "spark": "spark.readStream.format('kafka')",
+      "notes": "Kafka consumer — use Event Hub in Azure or Spark Structured Streaming"
+    },
+    "tKafkaOutput": {
+      "category": "messaging",
+      "data_factory": "NotSupported_UseEventHub",
+      "spark": "df.writeStream.format('kafka')",
+      "notes": "Kafka producer"
+    },
+    "tKafkaConnection": {
+      "category": "messaging",
+      "data_factory": "LinkedService_EventHub",
+      "spark": "Kafka bootstrap.servers configuration",
+      "notes": "Kafka connection"
+    },
+    "tJMSInput": {
+      "category": "messaging",
+      "data_factory": "NotSupported",
+      "spark": "stomp / jms Python library",
+      "notes": "JMS consumer"
+    },
+    "tJMSOutput": {
+      "category": "messaging",
+      "data_factory": "NotSupported",
+      "spark": "stomp / jms Python library",
+      "notes": "JMS producer"
+    },
+    "tActiveMQInput": {
+      "category": "messaging",
+      "data_factory": "NotSupported",
+      "spark": "stomp Python library",
+      "notes": "ActiveMQ consumer"
+    },
+    "tActiveMQOutput": {
+      "category": "messaging",
+      "data_factory": "NotSupported",
+      "spark": "stomp Python library",
+      "notes": "ActiveMQ producer"
+    },
+    "tRabbitMQInput": {
+      "category": "messaging",
+      "data_factory": "NotSupported",
+      "spark": "pika Python library",
+      "notes": "RabbitMQ consumer"
+    },
+    "tRabbitMQOutput": {
+      "category": "messaging",
+      "data_factory": "NotSupported",
+      "spark": "pika Python library",
+      "notes": "RabbitMQ producer"
+    },
+    "tAzureEventHubInput": {
+      "category": "messaging",
+      "data_factory": "EventHubConnector",
+      "spark": "spark.readStream.format('eventhubs')",
+      "notes": "Azure Event Hub consumer"
+    },
+    "tAzureEventHubOutput": {
+      "category": "messaging",
+      "data_factory": "EventHubConnector",
+      "spark": "df.writeStream.format('eventhubs')",
+      "notes": "Azure Event Hub producer"
+    },
+
+    "_comment_api_protocol": "=== API & PROTOCOL COMPONENTS ===",
+    "tRESTClient": {
+      "category": "api",
+      "data_factory": "WebActivity_CopyActivity_REST",
+      "spark": "requests library + spark.createDataFrame()",
+      "notes": "REST API call"
+    },
+    "tHTTPInput": {
+      "category": "api",
+      "data_factory": "WebActivity_CopyActivity_HTTP",
+      "spark": "requests / urllib3",
+      "notes": "HTTP GET/download"
+    },
+    "tHTTPClient": {
+      "category": "api",
+      "data_factory": "WebActivity",
+      "spark": "requests library",
+      "notes": "HTTP client"
+    },
+    "tSOAP": {
+      "category": "api",
+      "data_factory": "WebActivity_SOAP",
+      "spark": "zeep / requests with XML payload",
+      "notes": "SOAP web service call"
+    },
+    "tWebServiceInput": {
+      "category": "api",
+      "data_factory": "WebActivity",
+      "spark": "zeep / requests",
+      "notes": "Web service consumer"
+    },
+    "tSalesforceInput": {
+      "category": "api",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "SalesforceSource",
+      "spark": "simple-salesforce library",
+      "notes": "Salesforce source"
+    },
+    "tSalesforceOutput": {
+      "category": "api",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "SalesforceSink",
+      "spark": "simple-salesforce library",
+      "notes": "Salesforce sink"
+    },
+    "tSalesforceConnection": {
+      "category": "api",
+      "data_factory": "LinkedService_Salesforce",
+      "spark": "simple-salesforce connection",
+      "notes": "Salesforce connection"
+    },
+    "tSalesforceBulkExec": {
+      "category": "api",
+      "data_factory": "CopyActivity_BulkMode",
+      "spark": "simple-salesforce bulk API",
+      "notes": "Salesforce bulk operations"
+    },
+    "tSAPInput": {
+      "category": "api",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "SapTableSource",
+      "spark": "pyrfc / SAP HANA JDBC",
+      "notes": "SAP source"
+    },
+    "tSAPOutput": {
+      "category": "api",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "SapSink",
+      "spark": "pyrfc / SAP HANA JDBC",
+      "notes": "SAP sink"
+    },
+    "tSAPConnection": {
+      "category": "api",
+      "data_factory": "LinkedService_SAP",
+      "spark": "pyrfc connection config",
+      "notes": "SAP connection"
+    },
+    "tSAPBWInput": {
+      "category": "api",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "SapBwSource",
+      "spark": "pyrfc BW connector",
+      "notes": "SAP BW source"
+    },
+    "tLDAPInput": {
+      "category": "api",
+      "data_factory": "NotSupported",
+      "spark": "python-ldap library",
+      "notes": "LDAP read"
+    },
+    "tLDAPOutput": {
+      "category": "api",
+      "data_factory": "NotSupported",
+      "spark": "python-ldap library",
+      "notes": "LDAP write"
+    },
+    "tGraphQLInput": {
+      "category": "api",
+      "data_factory": "WebActivity_POST",
+      "spark": "requests with GraphQL query",
+      "notes": "GraphQL API"
+    },
+    "tODataInput": {
+      "category": "api",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "ODataSource",
+      "spark": "requests + OData URL",
+      "notes": "OData source"
+    },
+    "tServiceNowInput": {
+      "category": "api",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "ServiceNowSource",
+      "spark": "requests + ServiceNow API",
+      "notes": "ServiceNow source"
+    },
+
+    "_comment_transforms": "=== TRANSFORMATION COMPONENTS ===",
+    "tMap": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn_Join",
+      "spark": "df.withColumn() / df.join()",
+      "notes": "Complex — single tMap may map to multiple Spark operations"
+    },
+    "tFilter": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Filter",
+      "spark": "df.filter() / df.where()",
+      "notes": "Direct mapping"
+    },
+    "tFilterRow": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Filter",
+      "spark": "df.filter() / df.where()",
+      "notes": "Direct mapping"
+    },
+    "tAggregate": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Aggregate",
+      "spark": "df.groupBy().agg()",
+      "notes": "Direct mapping"
+    },
+    "tAggregateRow": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Aggregate",
+      "spark": "df.groupBy().agg()",
+      "notes": "Direct mapping"
+    },
+    "tSort": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Sort",
+      "spark": "df.orderBy()",
+      "notes": "Direct mapping"
+    },
+    "tSortRow": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Sort",
+      "spark": "df.orderBy()",
+      "notes": "Direct mapping"
+    },
+    "tUniqRow": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Aggregate",
+      "spark": "df.dropDuplicates()",
+      "notes": "Deduplicate rows"
+    },
+    "tJoin": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Join",
+      "spark": "df1.join(df2, ...)",
+      "notes": "Direct mapping"
+    },
+    "tUnite": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Union",
+      "spark": "df1.unionByName(df2)",
+      "notes": "Direct mapping"
+    },
+    "tSplitRow": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_ConditionalSplit",
+      "spark": "Multiple df.filter() calls",
+      "notes": "One filter per output branch"
+    },
+    "tXMLMap": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Flatten_DerivedColumn",
+      "spark": "spark.read.format('xml') + transforms",
+      "notes": "XML mapping"
+    },
+    "tDenormalize": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Pivot",
+      "spark": "df.groupBy().pivot()",
+      "notes": "Pivot/denormalize rows to columns"
+    },
+    "tNormalize": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Unpivot",
+      "spark": "df.select(explode())",
+      "notes": "Unpivot columns to rows"
+    },
+    "tReplace": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn",
+      "spark": "df.withColumn(regexp_replace())",
+      "notes": "String replacement"
+    },
+    "tConvertType": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn",
+      "spark": "df.withColumn(col.cast())",
+      "notes": "Type conversion"
+    },
+    "tReplicate": {
+      "category": "transform",
+      "data_factory": "MultipleSinks",
+      "spark": "Write df to multiple targets",
+      "notes": "Duplicate flow to multiple outputs"
+    },
+    "tSampleRow": {
+      "category": "transform",
+      "data_factory": "TopN_Percentage",
+      "spark": "df.sample(fraction) / df.limit(N)",
+      "notes": "Sample rows"
+    },
+    "tHashRow": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn",
+      "spark": "F.md5(F.concat_ws()) / F.sha2()",
+      "notes": "Hash row for deduplication/comparison"
+    },
+    "tGenKey": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_SurrogateKey",
+      "spark": "F.monotonically_increasing_id() / F.row_number()",
+      "notes": "Surrogate key generation"
+    },
+    "tRowGenerator": {
+      "category": "transform",
+      "data_factory": "NotApplicable",
+      "spark": "spark.range() / spark.createDataFrame()",
+      "notes": "Test data generation"
+    },
+    "tFixedFlowInput": {
+      "category": "transform",
+      "data_factory": "NotApplicable",
+      "spark": "spark.createDataFrame([...])",
+      "notes": "Fixed test data"
+    },
+    "tExtractXMLField": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Flatten",
+      "spark": "F.from_xml() / xpath extraction",
+      "notes": "Extract XML fields from column"
+    },
+    "tExtractJSONField": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Parse",
+      "spark": "F.from_json() / F.get_json_object()",
+      "notes": "Extract JSON fields from column"
+    },
+    "tExtractRegexFields": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn",
+      "spark": "F.regexp_extract()",
+      "notes": "Extract fields using regex"
+    },
+    "tExtractDelimitedFields": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn",
+      "spark": "F.split() + getItem()",
+      "notes": "Extract delimited fields from single column"
+    },
+    "tFuzzyMatch": {
+      "category": "transform",
+      "data_factory": "NotSupported",
+      "spark": "fuzzywuzzy / recordlinkage / Spark ML",
+      "notes": "Fuzzy matching — requires custom logic"
+    },
+    "tRecordMatching": {
+      "category": "transform",
+      "data_factory": "NotSupported",
+      "spark": "recordlinkage library",
+      "notes": "Record matching — requires custom logic"
+    },
+    "tMatchGroup": {
+      "category": "transform",
+      "data_factory": "NotSupported",
+      "spark": "Custom grouping logic",
+      "notes": "Match + group duplicates"
+    },
+    "tSchemaComplianceCheck": {
+      "category": "transform",
+      "data_factory": "DataQualityRules",
+      "spark": "Custom validation with df.filter()",
+      "notes": "Schema validation"
+    },
+    "tFlowMeter": {
+      "category": "transform",
+      "data_factory": "PipelineMetrics",
+      "spark": "df.count() + logging",
+      "notes": "Row count / throughput metrics"
+    },
+    "tWindowInput": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Window",
+      "spark": "Window.partitionBy().orderBy()",
+      "notes": "Window functions"
+    },
+    "tCacheIn": {
+      "category": "transform",
+      "data_factory": "NotApplicable",
+      "spark": "df.cache()",
+      "notes": "Cache dataset for reuse"
+    },
+    "tCacheOut": {
+      "category": "transform",
+      "data_factory": "NotApplicable",
+      "spark": "df.unpersist()",
+      "notes": "Release cached dataset"
+    },
+    "tBufferInput": {
+      "category": "transform",
+      "data_factory": "NotApplicable",
+      "spark": "df.cache() / df.persist()",
+      "notes": "Buffer rows in memory"
+    },
+    "tBufferOutput": {
+      "category": "transform",
+      "data_factory": "NotApplicable",
+      "spark": "df.unpersist()",
+      "notes": "Flush buffer"
+    },
+    "tDataMasking": {
+      "category": "transform",
+      "data_factory": "NotSupported",
+      "spark": "F.sha2() / F.regexp_replace()",
+      "notes": "Data masking / anonymization"
+    },
+    "tFillEmptyField": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn",
+      "spark": "F.coalesce() / df.na.fill()",
+      "notes": "Replace null/empty values"
+    },
+    "tFilterColumns": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_Select",
+      "spark": "df.select() / df.drop()",
+      "notes": "Select/drop columns"
+    },
+    "tRenameColumns": {
+      "category": "transform",
+      "data_factory": "MappingDataFlow_DerivedColumn",
+      "spark": "df.withColumnRenamed()",
+      "notes": "Rename columns"
+    },
+
+    "_comment_elt": "=== ELT / PUSHDOWN COMPONENTS ===",
+    "tELTInput": {
+      "category": "elt",
+      "data_factory": "CopyActivity",
+      "spark": "spark.sql('SELECT ...')",
+      "notes": "ELT input — pushdown to database"
+    },
+    "tELTOutput": {
+      "category": "elt",
+      "data_factory": "CopyActivity",
+      "spark": "spark.sql('INSERT INTO ...')",
+      "notes": "ELT output — pushdown to database"
+    },
+    "tELTMap": {
+      "category": "elt",
+      "data_factory": "MappingDataFlow",
+      "spark": "spark.sql() with JOINs/transforms",
+      "notes": "ELT mapping — pushdown transforms"
+    },
+    "tELTAggregate": {
+      "category": "elt",
+      "data_factory": "MappingDataFlow_Aggregate",
+      "spark": "spark.sql() with GROUP BY",
+      "notes": "ELT aggregation"
+    },
+    "tELTFilter": {
+      "category": "elt",
+      "data_factory": "MappingDataFlow_Filter",
+      "spark": "spark.sql() with WHERE",
+      "notes": "ELT filter"
+    },
+    "tELTSort": {
+      "category": "elt",
+      "data_factory": "MappingDataFlow_Sort",
+      "spark": "spark.sql() with ORDER BY",
+      "notes": "ELT sort"
+    },
+    "tELTUnite": {
+      "category": "elt",
+      "data_factory": "MappingDataFlow_Union",
+      "spark": "spark.sql() with UNION ALL",
+      "notes": "ELT union"
+    },
+    "tELTJoin": {
+      "category": "elt",
+      "data_factory": "MappingDataFlow_Join",
+      "spark": "spark.sql() with JOIN",
+      "notes": "ELT join"
+    },
+    "tELTDistinct": {
+      "category": "elt",
+      "data_factory": "MappingDataFlow_Aggregate",
+      "spark": "spark.sql() with DISTINCT",
+      "notes": "ELT distinct"
+    },
+    "tELTCreateTable": {
+      "category": "elt",
+      "data_factory": "ScriptActivity",
+      "spark": "spark.sql('CREATE TABLE ...')",
+      "notes": "ELT DDL"
+    },
+
+    "_comment_flow_control": "=== FLOW CONTROL COMPONENTS ===",
+    "tRunJob": {
+      "category": "flow_control",
+      "data_factory": "ExecutePipeline",
+      "spark": "mssparkutils.notebook.run()",
+      "notes": "Child job invocation"
+    },
+    "tPreJob": {
+      "category": "flow_control",
+      "data_factory": "Pipeline_OnStart",
+      "spark": "Code at beginning of notebook",
+      "notes": "Pre-processing logic"
+    },
+    "tPostJob": {
+      "category": "flow_control",
+      "data_factory": "Pipeline_OnCompletion",
+      "spark": "try/finally block",
+      "notes": "Post-processing logic"
+    },
+    "tWarn": {
+      "category": "flow_control",
+      "data_factory": "SetVariable_WebActivity",
+      "spark": "logging.warning()",
+      "notes": "Warning/alert"
+    },
+    "tDie": {
+      "category": "flow_control",
+      "data_factory": "FailActivity",
+      "spark": "raise Exception()",
+      "notes": "Abort execution"
+    },
+    "tFlowToIterate": {
+      "category": "flow_control",
+      "data_factory": "ForEachActivity",
+      "spark": "for item in df.collect():",
+      "notes": "Convert flow to iteration"
+    },
+    "tLoop": {
+      "category": "flow_control",
+      "data_factory": "UntilActivity_ForEachActivity",
+      "spark": "while/for loop",
+      "notes": "Looping"
+    },
+    "tForEach": {
+      "category": "flow_control",
+      "data_factory": "ForEachActivity",
+      "spark": "for loop",
+      "notes": "ForEach iteration"
+    },
+    "tParallelize": {
+      "category": "flow_control",
+      "data_factory": "ForEachActivity_Concurrent",
+      "spark": "Spark parallelism (native)",
+      "notes": "Parallel execution"
+    },
+    "tContextLoad": {
+      "category": "flow_control",
+      "data_factory": "PipelineParameters",
+      "spark": "Notebook parameters / config file",
+      "notes": "Context variable loading"
+    },
+    "tIfRow": {
+      "category": "flow_control",
+      "data_factory": "IfConditionActivity",
+      "spark": "if statement",
+      "notes": "Conditional branching"
+    },
+    "tTimeout": {
+      "category": "flow_control",
+      "data_factory": "PipelineTimeout",
+      "spark": "signal.alarm() / thread timeout",
+      "notes": "Timeout control"
+    },
+    "tFlowControl": {
+      "category": "flow_control",
+      "data_factory": "ActivityDependencies",
+      "spark": "Sequential code execution",
+      "notes": "Flow control / sequencing"
+    },
+    "tIterateToFlow": {
+      "category": "flow_control",
+      "data_factory": "Variable_ForEach_Array",
+      "spark": "List comprehension → DataFrame",
+      "notes": "Convert iteration to flow"
+    },
+
+    "_comment_error_handling": "=== ERROR HANDLING COMPONENTS ===",
+    "tCatch": {
+      "category": "error_handling",
+      "data_factory": "Pipeline_OnFailure",
+      "spark": "try/except block",
+      "notes": "Catch exceptions"
+    },
+    "tCatchError": {
+      "category": "error_handling",
+      "data_factory": "Pipeline_OnFailure",
+      "spark": "try/except block",
+      "notes": "Catch and handle errors"
+    },
+    "tLogCatcher": {
+      "category": "error_handling",
+      "data_factory": "Pipeline_LogAnalytics",
+      "spark": "logging module + appenders",
+      "notes": "Centralized log collection"
+    },
+    "tStatCatcher": {
+      "category": "error_handling",
+      "data_factory": "Pipeline_RunStatistics",
+      "spark": "Custom metrics with df.count() + logging",
+      "notes": "Execution statistics collection"
+    },
+    "tAssert": {
+      "category": "error_handling",
+      "data_factory": "FailActivity_OnCondition",
+      "spark": "assert statement / raise on condition",
+      "notes": "Assertion check"
+    },
+    "tAssertCatcher": {
+      "category": "error_handling",
+      "data_factory": "Pipeline_OnFailure",
+      "spark": "try/except for AssertionError",
+      "notes": "Catch assertion failures"
+    },
+    "tConnectionReset": {
+      "category": "error_handling",
+      "data_factory": "AutomaticRetryPolicy",
+      "spark": "JDBC reconnection logic",
+      "notes": "Reset DB connection on error"
+    },
+
+    "_comment_file_utilities": "=== FILE & DIRECTORY UTILITY COMPONENTS ===",
+    "tFileExist": {
+      "category": "file_utility",
+      "data_factory": "GetMetadataActivity_Exists",
+      "spark": "mssparkutils.fs.exists()",
+      "notes": "Check file existence"
+    },
+    "tFileDelete": {
+      "category": "file_utility",
+      "data_factory": "DeleteActivity",
+      "spark": "mssparkutils.fs.rm()",
+      "notes": "Delete file"
+    },
+    "tFileCopy": {
+      "category": "file_utility",
+      "data_factory": "CopyActivity",
+      "spark": "mssparkutils.fs.cp()",
+      "notes": "Copy file"
+    },
+    "tFileMove": {
+      "category": "file_utility",
+      "data_factory": "CopyActivity_PlusDelete",
+      "spark": "mssparkutils.fs.mv()",
+      "notes": "Move file (copy + delete)"
+    },
+    "tFileRename": {
+      "category": "file_utility",
+      "data_factory": "CopyActivity_PlusDelete",
+      "spark": "mssparkutils.fs.mv()",
+      "notes": "Rename file"
+    },
+    "tFileList": {
+      "category": "file_utility",
+      "data_factory": "GetMetadataActivity_ChildItems",
+      "spark": "mssparkutils.fs.ls()",
+      "notes": "List files in directory"
+    },
+    "tFileProperties": {
+      "category": "file_utility",
+      "data_factory": "GetMetadataActivity",
+      "spark": "mssparkutils.fs.ls()",
+      "notes": "Get file properties (size, modified)"
+    },
+    "tFileCompare": {
+      "category": "file_utility",
+      "data_factory": "NotSupported",
+      "spark": "Hash comparison in Python",
+      "notes": "Compare two files"
+    },
+    "tFileArchive": {
+      "category": "file_utility",
+      "data_factory": "NotSupported",
+      "spark": "zipfile / tarfile Python modules",
+      "notes": "Archive files (zip/tar)"
+    },
+    "tFileUnarchive": {
+      "category": "file_utility",
+      "data_factory": "NotSupported",
+      "spark": "zipfile / tarfile Python modules",
+      "notes": "Extract archive"
+    },
+    "tFileTouch": {
+      "category": "file_utility",
+      "data_factory": "ScriptActivity",
+      "spark": "mssparkutils.fs.put() with empty content",
+      "notes": "Create empty file"
+    },
+    "tDirectoryCreate": {
+      "category": "file_utility",
+      "data_factory": "ScriptActivity",
+      "spark": "mssparkutils.fs.mkdirs()",
+      "notes": "Create directory"
+    },
+    "tDirectoryList": {
+      "category": "file_utility",
+      "data_factory": "GetMetadataActivity",
+      "spark": "mssparkutils.fs.ls()",
+      "notes": "List directory contents"
+    },
+    "tDirectoryDelete": {
+      "category": "file_utility",
+      "data_factory": "DeleteActivity",
+      "spark": "mssparkutils.fs.rm(recursive=True)",
+      "notes": "Delete directory"
+    },
+
+    "_comment_ftp_sftp": "=== FTP / SFTP COMPONENTS ===",
+    "tFTPGet": {
+      "category": "file_transfer",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "FtpSource",
+      "spark": "ftplib Python library",
+      "notes": "Download from FTP"
+    },
+    "tFTPPut": {
+      "category": "file_transfer",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "FtpSink",
+      "spark": "ftplib Python library",
+      "notes": "Upload to FTP"
+    },
+    "tFTPConnection": {
+      "category": "file_transfer",
+      "data_factory": "LinkedService_FTP",
+      "spark": "ftplib connection",
+      "notes": "FTP connection"
+    },
+    "tFTPDelete": {
+      "category": "file_transfer",
+      "data_factory": "ScriptActivity",
+      "spark": "ftplib delete",
+      "notes": "Delete file on FTP"
+    },
+    "tFTPList": {
+      "category": "file_transfer",
+      "data_factory": "GetMetadataActivity",
+      "spark": "ftplib.nlst()",
+      "notes": "List FTP directory"
+    },
+    "tSFTPGet": {
+      "category": "file_transfer",
+      "data_factory": "CopyActivity",
+      "data_factory_source_type": "SftpSource",
+      "spark": "paramiko SFTPClient",
+      "notes": "Download from SFTP"
+    },
+    "tSFTPPut": {
+      "category": "file_transfer",
+      "data_factory": "CopyActivity",
+      "data_factory_sink_type": "SftpSink",
+      "spark": "paramiko SFTPClient.put()",
+      "notes": "Upload to SFTP"
+    },
+    "tSFTPConnection": {
+      "category": "file_transfer",
+      "data_factory": "LinkedService_SFTP",
+      "spark": "paramiko SSH connection",
+      "notes": "SFTP connection"
+    },
+    "tSFTPDelete": {
+      "category": "file_transfer",
+      "data_factory": "ScriptActivity",
+      "spark": "paramiko SFTPClient.remove()",
+      "notes": "Delete file on SFTP"
+    },
+    "tSFTPRename": {
+      "category": "file_transfer",
+      "data_factory": "ScriptActivity",
+      "spark": "paramiko SFTPClient.rename()",
+      "notes": "Rename file on SFTP"
+    },
+    "tSFTPList": {
+      "category": "file_transfer",
+      "data_factory": "GetMetadataActivity",
+      "spark": "paramiko SFTPClient.listdir()",
+      "notes": "List SFTP directory"
+    },
+
+    "_comment_utilities": "=== GENERAL UTILITY COMPONENTS ===",
+    "tLogRow": {
+      "category": "utility",
+      "data_factory": "Pipeline_monitoring",
+      "spark": "display() / print()",
+      "notes": "Debugging/logging"
+    },
+    "tSendMail": {
+      "category": "utility",
+      "data_factory": "WebActivity_LogicApp",
+      "spark": "smtplib or Logic App webhook",
+      "notes": "Email notification"
+    },
+    "tSystem": {
+      "category": "utility",
+      "data_factory": "ScriptActivity",
+      "spark": "subprocess.run()",
+      "notes": "Execute system command"
+    },
+    "tSleep": {
+      "category": "utility",
+      "data_factory": "WaitActivity",
+      "spark": "time.sleep()",
+      "notes": "Delay execution"
+    },
+    "tSetGlobalVar": {
+      "category": "utility",
+      "data_factory": "SetVariableActivity",
+      "spark": "Python variable",
+      "notes": "Set global variable"
+    },
+    "tContextDump": {
+      "category": "utility",
+      "data_factory": "PipelineParameterLogging",
+      "spark": "print(locals())",
+      "notes": "Dump context variables"
+    },
+    "tSSH": {
+      "category": "utility",
+      "data_factory": "NotSupported",
+      "spark": "paramiko SSH client",
+      "notes": "SSH command execution"
+    },
+    "tSSHRemote": {
+      "category": "utility",
+      "data_factory": "NotSupported",
+      "spark": "paramiko SSH client",
+      "notes": "Remote SSH execution"
+    },
+    "tLibraryLoad": {
+      "category": "utility",
+      "data_factory": "NotApplicable",
+      "spark": "%pip install / sc.addPyFile()",
+      "notes": "Load external library"
+    },
+    "tTimestamp": {
+      "category": "utility",
+      "data_factory": "PipelineVariable_Timestamp",
+      "spark": "datetime.utcnow()",
+      "notes": "Get current timestamp"
+    },
+
+    "_comment_custom_code": "=== CUSTOM CODE COMPONENTS ===",
+    "tJava": {
+      "category": "custom_code",
+      "data_factory": "NotSupported_UseSparkInstead",
+      "spark": "Python code block",
+      "notes": "Custom Java — manually translate to Python"
+    },
+    "tJavaRow": {
+      "category": "custom_code",
+      "data_factory": "NotSupported_UseSparkInstead",
+      "spark": "df.withColumn() with UDF",
+      "notes": "Row-level Java — translate to Spark UDF"
+    },
+    "tJavaFlex": {
+      "category": "custom_code",
+      "data_factory": "NotSupported_UseSparkInstead",
+      "spark": "Custom PySpark with init/main/end blocks",
+      "notes": "Flexible Java — translate to Python pattern"
+    },
+    "tGroovy": {
+      "category": "custom_code",
+      "data_factory": "ScriptActivity",
+      "spark": "Python code block",
+      "notes": "Groovy script — translate to Python"
+    },
+    "tPythonRow": {
+      "category": "custom_code",
+      "data_factory": "NotApplicable",
+      "spark": "Direct PySpark / UDF",
+      "notes": "Already Python — direct migration"
+    },
+    "tJavaScript": {
+      "category": "custom_code",
+      "data_factory": "NotSupported",
+      "spark": "Python equivalent",
+      "notes": "JavaScript — translate to Python"
+    },
+    "tSetKeystore": {
+      "category": "custom_code",
+      "data_factory": "KeyVaultReference",
+      "spark": "mssparkutils.credentials.getSecret()",
+      "notes": "Keystore / key vault"
+    }
+  }
+}

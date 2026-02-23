@@ -1,0 +1,36 @@
+{
+  "description": "Sample validation test case for row count and data diff validation",
+  "entity": "customers",
+  "source": {
+    "connection_string": "postgresql://user:pass@source-server:5432/sourcedb",
+    "table": "public.customers",
+    "query": "SELECT COUNT(*) FROM public.customers"
+  },
+  "target": {
+    "type": "lakehouse",
+    "table": "lakehouse_name.schema.customers",
+    "query": "SELECT COUNT(*) FROM lakehouse_name.schema.customers"
+  },
+  "validation": {
+    "row_count": {
+      "enabled": true,
+      "threshold_pct": 0
+    },
+    "data_diff": {
+      "enabled": true,
+      "key_columns": ["customer_id"],
+      "compare_columns": null,
+      "sample_size": 10000
+    },
+    "schema": {
+      "enabled": true,
+      "expected_columns": [
+        {"name": "customer_id", "type": "INTEGER", "nullable": false},
+        {"name": "first_name", "type": "VARCHAR", "nullable": true},
+        {"name": "last_name", "type": "VARCHAR", "nullable": true},
+        {"name": "email", "type": "VARCHAR", "nullable": true},
+        {"name": "created_date", "type": "TIMESTAMP", "nullable": true}
+      ]
+    }
+  }
+}

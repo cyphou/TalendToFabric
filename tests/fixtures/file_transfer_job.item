@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fixture: File transfer job — SFTP get, process CSV, archive -->
+<talendfile:ProcessType xmlns:talendfile="platform:/resource/org.talend.model/model/TalendFile.xsd"
+                        xmlns:xmi="http://www.omg.org/XMI">
+  <node componentName="tSFTPGet" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tSFTPGet_1"/>
+    <elementParameter name="HOST" value="sftp.vendor.com"/>
+    <elementParameter name="PORT" value="22"/>
+    <elementParameter name="USER" value="etl_user"/>
+    <elementParameter name="FILENAME" value="/inbound/daily_feed_*.csv"/>
+  </node>
+  <node componentName="tFileInputDelimited" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tFileInputDelimited_1"/>
+    <elementParameter name="FILENAME" value="/staging/daily_feed.csv"/>
+    <elementParameter name="HEADER" value="1"/>
+  </node>
+  <node componentName="tMap" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tMap_1"/>
+    <elementParameter name="EXPRESSION_clean_name" value="StringHandling.TRIM(row1.name)"/>
+  </node>
+  <node componentName="tPostgresqlOutput" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tPostgresqlOutput_1"/>
+    <elementParameter name="TABLE" value="vendor_data"/>
+  </node>
+  <node componentName="tFileArchive" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tFileArchive_1"/>
+    <elementParameter name="FILENAME" value="/staging/daily_feed.csv"/>
+    <elementParameter name="ARCHIVE_PATH" value="/archive/daily_feed_20250101.zip"/>
+  </node>
+  <node componentName="tFileDelete" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tFileDelete_1"/>
+    <elementParameter name="FILENAME" value="/staging/daily_feed.csv"/>
+  </node>
+  <connection source="tSFTPGet_1" target="tFileInputDelimited_1" connectorName="SUBJOB_OK" lineStyle="1" label="ok"/>
+  <connection source="tFileInputDelimited_1" target="tMap_1" connectorName="FLOW" lineStyle="0" label="row1"/>
+  <connection source="tMap_1" target="tPostgresqlOutput_1" connectorName="FLOW" lineStyle="0" label="out1"/>
+  <connection source="tPostgresqlOutput_1" target="tFileArchive_1" connectorName="SUBJOB_OK" lineStyle="1" label="ok"/>
+  <connection source="tFileArchive_1" target="tFileDelete_1" connectorName="SUBJOB_OK" lineStyle="1" label="ok"/>
+</talendfile:ProcessType>

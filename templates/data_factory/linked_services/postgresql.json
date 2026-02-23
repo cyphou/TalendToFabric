@@ -1,0 +1,24 @@
+{
+  "name": "ls_postgresql_{{environment}}",
+  "type": "LinkedService",
+  "properties": {
+    "type": "AzurePostgreSql",
+    "typeProperties": {
+      "server": "{{server_name}}.postgres.database.azure.com",
+      "port": 5432,
+      "database": "{{database_name}}",
+      "username": "{{username}}",
+      "password": {
+        "type": "SecureString",
+        "value": "{{password_placeholder}}"
+      },
+      "sslMode": "Require",
+      "encryptedCredential": "{{encrypted_credential}}"
+    },
+    "annotations": [
+      "MigratedFromTalend",
+      "PostgreSQL"
+    ],
+    "description": "Azure Database for PostgreSQL — migrated from Talend tPostgresqlConnection"
+  }
+}

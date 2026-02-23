@@ -1,0 +1,63 @@
+{
+  "description": "Environment-specific configuration for the Talend to Fabric migration",
+  "dev": {
+    "fabric_workspace_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "fabric_workspace_name": "ws-talend-migration-dev",
+    "source_database": {
+      "host": "dev-pg-server.postgres.database.azure.com",
+      "port": 5432,
+      "database": "sourcedb_dev",
+      "schema": "public",
+      "key_vault": "kv-migration-dev",
+      "secret_name": "pg-password-dev"
+    },
+    "lakehouse": {
+      "name": "lh_migration_dev",
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    },
+    "warehouse": {
+      "name": "wh_migration_dev",
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    }
+  },
+  "uat": {
+    "fabric_workspace_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "fabric_workspace_name": "ws-talend-migration-uat",
+    "source_database": {
+      "host": "uat-pg-server.postgres.database.azure.com",
+      "port": 5432,
+      "database": "sourcedb_uat",
+      "schema": "public",
+      "key_vault": "kv-migration-uat",
+      "secret_name": "pg-password-uat"
+    },
+    "lakehouse": {
+      "name": "lh_migration_uat",
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    },
+    "warehouse": {
+      "name": "wh_migration_uat",
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    }
+  },
+  "prod": {
+    "fabric_workspace_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "fabric_workspace_name": "ws-talend-migration-prod",
+    "source_database": {
+      "host": "prod-pg-server.postgres.database.azure.com",
+      "port": 5432,
+      "database": "sourcedb_prod",
+      "schema": "public",
+      "key_vault": "kv-migration-prod",
+      "secret_name": "pg-password-prod"
+    },
+    "lakehouse": {
+      "name": "lh_migration_prod",
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    },
+    "warehouse": {
+      "name": "wh_migration_prod",
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    }
+  }
+}

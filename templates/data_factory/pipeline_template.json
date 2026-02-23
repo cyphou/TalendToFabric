@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "name": "pl_{{domain}}_{{action}}_{{entity}}",
+  "properties": {
+    "description": "Migrated from Talend job: {{talend_job_name}}",
+    "activities": [
+      {
+        "name": "Copy_{{entity}}",
+        "type": "Copy",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 3,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "source": {
+            "type": "{{source_type}}Source",
+            "query": "{{source_query}}"
+          },
+          "sink": {
+            "type": "{{sink_type}}Sink",
+            "writeBehavior": "upsert",
+            "preCopyScript": "{{pre_copy_sql}}"
+          },
+          "enableStaging": false
+        },
+        "inputs": [
+          {
+            "referenceName": "ds_{{source_name}}_{{entity}}",
+            "type": "DatasetReference"
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "ds_{{sink_name}}_{{entity}}",
+            "type": "DatasetReference"
+          }
+        ]
+      }
+    ],
+    "parameters": {
+      "RunDate": {
+        "type": "string",
+        "defaultValue": "@utcNow('yyyy-MM-dd')"
+      },
+      "IsFullLoad": {
+        "type": "bool",
+        "defaultValue": false
+      }
+    },
+    "variables": {
+      "RowCount": {
+        "type": "String"
+      },
+      "Status": {
+        "type": "String",
+        "defaultValue": "Started"
+      }
+    },
+    "annotations": [
+      "MigratedFromTalend",
+      "{{talend_job_name}}"
+    ]
+  }
+}

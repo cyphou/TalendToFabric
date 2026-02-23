@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fixture: Orchestration job — tPreJob → tRunJob × 2 → tPostJob with error handling -->
+<talendfile:ProcessType xmlns:talendfile="platform:/resource/org.talend.model/model/TalendFile.xsd"
+                        xmlns:xmi="http://www.omg.org/XMI">
+  <node componentName="tPreJob" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tPreJob_1"/>
+  </node>
+  <node componentName="tRunJob" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tRunJob_1"/>
+    <elementParameter name="JOB_NAME" value="child_load_customers"/>
+  </node>
+  <node componentName="tRunJob" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tRunJob_2"/>
+    <elementParameter name="JOB_NAME" value="child_load_orders"/>
+  </node>
+  <node componentName="tPostJob" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tPostJob_1"/>
+  </node>
+  <node componentName="tLogCatcher" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tLogCatcher_1"/>
+  </node>
+  <node componentName="tSendMail" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tSendMail_1"/>
+    <elementParameter name="TO" value="admin@example.com"/>
+    <elementParameter name="SUBJECT" value="Job Failure Notification"/>
+  </node>
+  <connection source="tPreJob_1" target="tRunJob_1" connectorName="SUBJOB_OK" lineStyle="1" label="OnSubjobOk"/>
+  <connection source="tRunJob_1" target="tRunJob_2" connectorName="SUBJOB_OK" lineStyle="1" label="OnSubjobOk"/>
+  <connection source="tRunJob_2" target="tPostJob_1" connectorName="SUBJOB_OK" lineStyle="1" label="OnSubjobOk"/>
+  <connection source="tLogCatcher_1" target="tSendMail_1" connectorName="FLOW" lineStyle="0" label="row1"/>
+  <subjob name="main_flow" startNode="tPreJob_1"/>
+  <subjob name="error_handling" startNode="tLogCatcher_1"/>
+  <contextParameter name="env" type="id_String" value="DEV" prompt="Environment" comment=""/>
+</talendfile:ProcessType>

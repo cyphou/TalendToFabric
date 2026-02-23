@@ -1,0 +1,16 @@
+{
+  "name": "ls_lakehouse_{{environment}}",
+  "type": "LinkedService",
+  "properties": {
+    "type": "Lakehouse",
+    "typeProperties": {
+      "workspaceId": "{{fabric_workspace_id}}",
+      "artifactId": "{{lakehouse_id}}"
+    },
+    "annotations": [
+      "MigratedFromTalend",
+      "Lakehouse"
+    ],
+    "description": "Fabric Lakehouse — target for migrated Talend outputs"
+  }
+}

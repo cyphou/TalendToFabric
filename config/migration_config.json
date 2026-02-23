@@ -1,0 +1,58 @@
+{
+  "description": "Migration configuration — rules, settings, and validation parameters",
+  "project": {
+    "name": "Talend to Fabric Migration",
+    "version": "1.0.0",
+    "source_platform": "Talend",
+    "target_platform": "Microsoft Fabric",
+    "database_migration": "Oracle → PostgreSQL"
+  },
+  "translation": {
+    "default_target": "DataFactory",
+    "complexity_threshold_for_spark": 3.5,
+    "auto_translate_sql": true,
+    "add_audit_columns": true,
+    "audit_columns": [
+      "_etl_loaded_at",
+      "_etl_source",
+      "_etl_run_date"
+    ]
+  },
+  "naming_conventions": {
+    "pipeline_prefix": "pl_",
+    "notebook_prefix": "nb_",
+    "dataflow_prefix": "df_",
+    "dataset_prefix": "ds_",
+    "linked_service_prefix": "ls_"
+  },
+  "validation": {
+    "row_count_threshold_pct": 0,
+    "data_diff_sample_size": 10000,
+    "run_schema_validation": true,
+    "row_count_tests": [
+      {
+        "entity": "customers",
+        "source_table": "public.customers",
+        "target_table": "lh_migration.default.customers",
+        "threshold_pct": 0
+      },
+      {
+        "entity": "orders",
+        "source_table": "public.orders",
+        "target_table": "lh_migration.default.orders",
+        "threshold_pct": 0
+      },
+      {
+        "entity": "products",
+        "source_table": "public.products",
+        "target_table": "lh_migration.default.dim_products",
+        "threshold_pct": 0
+      }
+    ]
+  },
+  "deployment": {
+    "use_service_principal": true,
+    "parallel_deployment": false,
+    "rollback_on_failure": true
+  }
+}

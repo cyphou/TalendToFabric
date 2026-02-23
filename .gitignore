@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Pytest
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Generated outputs (re-generate with translators)
+output/
+output_real/
+
+# Downloaded Talend project (large, re-downloadable)
+real_talend_project/
+
+# Temp files
+*.tmp
+*.bak

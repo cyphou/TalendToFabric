@@ -1,0 +1,51 @@
+{
+  "name": "Copy_{{entity}}",
+  "description": "Copy {{entity}} from {{source}} to {{target}} — migrated from Talend {{talend_component}}",
+  "type": "Copy",
+  "dependsOn": [],
+  "policy": {
+    "timeout": "0.02:00:00",
+    "retry": 3,
+    "retryIntervalInSeconds": 30,
+    "secureOutput": false,
+    "secureInput": false
+  },
+  "typeProperties": {
+    "source": {
+      "type": "AzurePostgreSqlSource",
+      "query": {
+        "value": "@if(pipeline().parameters.IsFullLoad, 'SELECT * FROM {{schema}}.{{table}}', concat('SELECT * FROM {{schema}}.{{table}} WHERE modified_date >= ''', pipeline().parameters.RunDate, ''''))",
+        "type": "Expression"
+      },
+      "partitionOption": "None"
+    },
+    "sink": {
+      "type": "LakehouseTableSink",
+      "tableActionOption": "Append",
+      "partitionOption": "None"
+    },
+    "enableStaging": false,
+    "translator": {
+      "type": "TabularTranslator",
+      "typeConversion": true,
+      "typeConversionSettings": {
+        "allowDataTruncation": true,
+        "treatBooleanAsNumber": false
+      }
+    }
+  },
+  "inputs": [
+    {
+      "referenceName": "ds_postgresql_{{entity}}",
+      "type": "DatasetReference",
+      "parameters": {}
+    }
+  ],
+  "outputs": [
+    {
+      "referenceName": "ds_lakehouse_{{entity}}",
+      "type": "DatasetReference",
+      "parameters": {}
+    }
+  ]
+}

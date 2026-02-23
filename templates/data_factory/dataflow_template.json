@@ -1,0 +1,47 @@
+{
+  "name": "df_{{domain}}_{{action}}_{{entity}}",
+  "description": "Data Flow migrated from Talend job: {{talend_job_name}}",
+  "type": "MappingDataFlow",
+  "typeProperties": {
+    "sources": [
+      {
+        "name": "source_{{entity}}",
+        "dataset": {
+          "referenceName": "ds_postgresql_{{entity}}",
+          "type": "DatasetReference"
+        },
+        "description": "Source: {{source_table}}",
+        "schemaLinked": true
+      }
+    ],
+    "sinks": [
+      {
+        "name": "sink_{{entity}}",
+        "dataset": {
+          "referenceName": "ds_lakehouse_{{entity}}",
+          "type": "DatasetReference"
+        },
+        "description": "Sink: Lakehouse {{target_table}}"
+      }
+    ],
+    "transformations": [
+      {
+        "name": "FilterRows",
+        "description": "Migrated from Talend tFilterRow: {{filter_condition}}"
+      },
+      {
+        "name": "DeriveColumns",
+        "description": "Migrated from Talend tMap expressions"
+      },
+      {
+        "name": "AggregateData",
+        "description": "Migrated from Talend tAggregate"
+      },
+      {
+        "name": "SortOutput",
+        "description": "Migrated from Talend tSort"
+      }
+    ],
+    "script": "source(output(\n\t\t{{column_definitions}}\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false) ~> source_{{entity}}\nsource_{{entity}} filter({{filter_expression}}) ~> FilterRows\nFilterRows derive(\n\t\t{{derived_columns}}\n\t) ~> DeriveColumns\nDeriveColumns aggregate(\n\t\tgroupBy({{group_by_columns}}),\n\t\t{{aggregate_expressions}}\n\t) ~> AggregateData\nAggregateData sort({{sort_expression}}) ~> SortOutput\nSortOutput sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'delta') ~> sink_{{entity}}"
+  }
+}

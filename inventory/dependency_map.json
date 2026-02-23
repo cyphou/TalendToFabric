@@ -1,0 +1,56 @@
+{
+  "description": "Talend job dependency graph — maps parent jobs to child jobs",
+  "jobs": {
+    "sample_parent_daily": {
+      "type": "orchestration",
+      "children": [
+        {
+          "job_name": "sample_copy_customers",
+          "order": 1,
+          "condition": "always",
+          "on_error": "warn_and_continue"
+        },
+        {
+          "job_name": "sample_file_load",
+          "order": 2,
+          "condition": "always",
+          "on_error": "warn_and_continue"
+        },
+        {
+          "job_name": "sample_transform_orders",
+          "order": 3,
+          "condition": "on_success_of_previous",
+          "on_error": "stop"
+        },
+        {
+          "job_name": "sample_scd2_products",
+          "order": 4,
+          "condition": "on_success_of_previous",
+          "on_error": "stop"
+        }
+      ],
+      "schedule": "daily at 02:00 UTC",
+      "fabric_target": "Data Factory Pipeline (master orchestrator)"
+    },
+    "sample_copy_customers": {
+      "type": "leaf",
+      "children": [],
+      "fabric_target": "Data Factory Copy Pipeline"
+    },
+    "sample_file_load": {
+      "type": "leaf",
+      "children": [],
+      "fabric_target": "Data Factory Copy Pipeline"
+    },
+    "sample_transform_orders": {
+      "type": "leaf",
+      "children": [],
+      "fabric_target": "Spark Notebook"
+    },
+    "sample_scd2_products": {
+      "type": "leaf",
+      "children": [],
+      "fabric_target": "Spark Notebook"
+    }
+  }
+}

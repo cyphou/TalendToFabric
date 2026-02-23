@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fixture: Complex ETL — multi-source, tMap join, aggregate, custom code, error handling, file output -->
+<talendfile:ProcessType xmlns:talendfile="platform:/resource/org.talend.model/model/TalendFile.xsd"
+                        xmlns:xmi="http://www.omg.org/XMI">
+  <!-- Sources -->
+  <node componentName="tOracleInput" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tOracleInput_1"/>
+    <elementParameter name="HOST" value="oracle-prod"/>
+    <elementParameter name="DBNAME" value="SALESDB"/>
+    <elementParameter name="SCHEMA_DB" value="SALES"/>
+    <elementParameter name="TABLE" value="ORDERS"/>
+    <elementParameter name="QUERY" value="SELECT o.*, c.name FROM SALES.ORDERS o JOIN SALES.CUSTOMERS c ON o.cust_id = c.id WHERE o.order_date >= ADD_MONTHS(SYSDATE, -3)"/>
+  </node>
+  <node componentName="tFileInputDelimited" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tFileInputDelimited_1"/>
+    <elementParameter name="FILENAME" value="/data/reference/products.csv"/>
+    <elementParameter name="HEADER" value="1"/>
+    <elementParameter name="FIELD_SEPARATOR" value=","/>
+  </node>
+  <node componentName="tFileInputJSON" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tFileInputJSON_1"/>
+    <elementParameter name="FILENAME" value="/data/config/exchange_rates.json"/>
+  </node>
+
+  <!-- DB Connection -->
+  <node componentName="tOracleConnection" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tOracleConnection_1"/>
+    <elementParameter name="HOST" value="oracle-prod"/>
+    <elementParameter name="PORT" value="1521"/>
+    <elementParameter name="DBNAME" value="SALESDB"/>
+    <elementParameter name="USER" value="sales_user"/>
+  </node>
+
+  <!-- Transformations -->
+  <node componentName="tMap" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tMap_1"/>
+    <elementParameter name="EXPRESSION_amount_eur" value="row1.amount * row3.rate"/>
+    <elementParameter name="EXPRESSION_product_name" value="StringHandling.UPCASE(row2.name)"/>
+    <elementParameter name="MAP_category" value="row2.category"/>
+  </node>
+  <node componentName="tAggregateRow" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tAggregateRow_1"/>
+    <elementParameter name="GROUP_BY" value="category,region"/>
+    <elementParameter name="OPERATION_total" value="sum"/>
+    <elementParameter name="OPERATION_count" value="count"/>
+  </node>
+  <node componentName="tSortRow" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tSortRow_1"/>
+    <elementParameter name="SORT_KEY" value="total"/>
+    <elementParameter name="SORT_ORDER" value="DESC"/>
+  </node>
+  <node componentName="tUniqRow" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tUniqRow_1"/>
+    <elementParameter name="KEY_COLUMN" value="order_id"/>
+  </node>
+
+  <!-- Custom code -->
+  <node componentName="tJavaRow" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tJavaRow_1"/>
+    <elementParameter name="CODE" value="output_row.status = input_row.amount > 1000 ? &quot;HIGH&quot; : &quot;NORMAL&quot;; output_row.processed_date = TalendDate.getCurrentDate();"/>
+  </node>
+
+  <!-- Error handling -->
+  <node componentName="tLogCatcher" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tLogCatcher_1"/>
+  </node>
+  <node componentName="tCatch" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tCatch_1"/>
+  </node>
+
+  <!-- Outputs -->
+  <node componentName="tPostgresqlOutput" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tPostgresqlOutput_1"/>
+    <elementParameter name="HOST" value="pg-server"/>
+    <elementParameter name="DBNAME" value="analytics"/>
+    <elementParameter name="TABLE" value="order_summary"/>
+  </node>
+  <node componentName="tFileOutputDelimited" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tFileOutputDelimited_1"/>
+    <elementParameter name="FILENAME" value="/output/order_summary.csv"/>
+    <elementParameter name="FIELD_SEPARATOR" value="|"/>
+  </node>
+  <node componentName="tLogRow" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tLogRow_1"/>
+  </node>
+
+  <!-- Connections -->
+  <connection source="tOracleInput_1" target="tMap_1" connectorName="FLOW" lineStyle="0" label="row1"/>
+  <connection source="tFileInputDelimited_1" target="tMap_1" connectorName="FLOW" lineStyle="0" label="row2"/>
+  <connection source="tFileInputJSON_1" target="tMap_1" connectorName="FLOW" lineStyle="0" label="row3"/>
+  <connection source="tMap_1" target="tUniqRow_1" connectorName="FLOW" lineStyle="0" label="out1"/>
+  <connection source="tUniqRow_1" target="tJavaRow_1" connectorName="FLOW" lineStyle="0" label="unique"/>
+  <connection source="tJavaRow_1" target="tAggregateRow_1" connectorName="FLOW" lineStyle="0" label="processed"/>
+  <connection source="tAggregateRow_1" target="tSortRow_1" connectorName="FLOW" lineStyle="0" label="agg"/>
+  <connection source="tSortRow_1" target="tPostgresqlOutput_1" connectorName="FLOW" lineStyle="0" label="sorted"/>
+  <connection source="tSortRow_1" target="tFileOutputDelimited_1" connectorName="FLOW" lineStyle="0" label="sorted_copy"/>
+  <connection source="tLogCatcher_1" target="tLogRow_1" connectorName="FLOW" lineStyle="0" label="errors"/>
+
+  <!-- Subjobs -->
+  <subjob name="main_etl" startNode="tOracleInput_1"/>
+  <subjob name="file_source" startNode="tFileInputDelimited_1"/>
+  <subjob name="json_source" startNode="tFileInputJSON_1"/>
+  <subjob name="error_handler" startNode="tLogCatcher_1"/>
+
+  <!-- Context -->
+  <contextParameter name="env" type="id_String" value="PROD" prompt="Environment" comment=""/>
+  <contextParameter name="batch_date" type="id_Date" value="2025-01-01" prompt="Batch Date" comment="Processing date"/>
+  <contextParameter name="oracle_host" type="id_String" value="oracle-prod" prompt="" comment=""/>
+  <contextParameter name="pg_host" type="id_String" value="pg-server" prompt="" comment=""/>
+</talendfile:ProcessType>

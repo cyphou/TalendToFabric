@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fixture: Simple copy job — tOracleInput → tPostgresqlOutput -->
+<talendfile:ProcessType xmlns:talendfile="platform:/resource/org.talend.model/model/TalendFile.xsd"
+                        xmlns:xmi="http://www.omg.org/XMI">
+  <node componentName="tOracleInput" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tOracleInput_1"/>
+    <elementParameter name="HOST" value="oracle-server"/>
+    <elementParameter name="PORT" value="1521"/>
+    <elementParameter name="DBNAME" value="ORCL"/>
+    <elementParameter name="SCHEMA_DB" value="HR"/>
+    <elementParameter name="TABLE" value="EMPLOYEES"/>
+    <elementParameter name="QUERY" value="SELECT * FROM HR.EMPLOYEES"/>
+  </node>
+  <node componentName="tPostgresqlOutput" componentVersion="0.102">
+    <elementParameter name="UNIQUE_NAME" value="tPostgresqlOutput_1"/>
+    <elementParameter name="HOST" value="pg-server"/>
+    <elementParameter name="PORT" value="5432"/>
+    <elementParameter name="DBNAME" value="hrdb"/>
+    <elementParameter name="SCHEMA_DB" value="public"/>
+    <elementParameter name="TABLE" value="employees"/>
+  </node>
+  <connection source="tOracleInput_1" target="tPostgresqlOutput_1" connectorName="FLOW" lineStyle="0" label="row1"/>
+  <contextParameter name="db_host" type="id_String" value="oracle-server" prompt="Database Host" comment="Oracle host"/>
+  <contextParameter name="db_port" type="id_Integer" value="1521" prompt="Port" comment=""/>
+</talendfile:ProcessType>
