@@ -226,6 +226,12 @@ def spark_translator():
     return SparkTranslator()
 
 
+@pytest.fixture
+def notebook_translator():
+    from translate_to_notebook import NotebookTranslator
+    return NotebookTranslator()
+
+
 # ── SQL Translator instance ─────────────────────────────────────────────────
 
 @pytest.fixture

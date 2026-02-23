@@ -57,6 +57,7 @@ TalendToFabric/
 │   ├── requirements.txt            # Python dependencies
 │   ├── translate_to_adf.py         # Generate Data Factory pipeline JSON
 │   ├── translate_to_spark.py       # Generate Spark notebooks (.py)
+│   ├── translate_to_notebook.py    # Generate Jupyter Notebooks (.ipynb)
 │   └── sql_translator.py          # Multi-dialect SQL → PostgreSQL translator
 │                                    # (Oracle, SQL Server, MySQL, DB2, Teradata, Snowflake, Sybase)
 │
@@ -68,7 +69,7 @@ TalendToFabric/
 │   └── test_cases/                 # Test case definitions
 │       └── sample_test.json        # Sample validation test case
 │
-├── tests/                          # Pytest test suite (392 tests)
+├── tests/                          # Pytest test suite (423 tests)
 │   ├── conftest.py                 # Shared fixtures & helpers
 │   ├── run_tests.py                # CLI test runner
 │   ├── fixtures/                   # 7 Talend .item test fixtures
@@ -82,6 +83,7 @@ TalendToFabric/
 │   ├── test_parser.py              # 57 tests — parser & inventory
 │   ├── test_translate_to_adf.py    # 34 tests — ADF pipeline generation
 │   ├── test_translate_to_spark.py  # 43 tests — Spark notebook generation
+│   ├── test_translate_to_notebook.py # 34 tests — Jupyter .ipynb generation
 │   ├── test_sql_translator.py      # 26 tests — Oracle→PostgreSQL rules
 │   ├── test_sql_dialects.py        # 102 tests — SQL Server, MySQL, DB2, Teradata, Snowflake, Sybase
 │   ├── test_new_features.py        # 93 tests — Hash, CDC, schema, tMap, bigdata, templates
@@ -138,8 +140,11 @@ Open `inventory/talend_job_inventory.csv` and review:
 cd translator
 python translate_to_adf.py --inventory ../inventory/talend_job_inventory.csv --output ../output/adf/
 
-# For Spark notebooks
+# For Spark notebooks (.py)
 python translate_to_spark.py --inventory ../inventory/talend_job_inventory.csv --output ../output/spark/
+
+# For Jupyter Notebooks (.ipynb) — ready to import into Fabric
+python translate_to_notebook.py --inventory ../inventory/talend_job_inventory.csv --output ../output/notebooks/
 ```
 
 ### Step 5: Validate
@@ -242,12 +247,13 @@ ELSE                                                             → Data Factor
 | `test_parser.py` | 57 | Parser, inventory, metadata |
 | `test_translate_to_adf.py` | 34 | ADF pipeline generation |
 | `test_translate_to_spark.py` | 43 | Spark notebook generation |
+| `test_translate_to_notebook.py` | 34 | Jupyter .ipynb generation |
 | `test_sql_translator.py` | 26 | Oracle → PostgreSQL rules |
 | `test_sql_dialects.py` | 102 | 6 additional SQL dialects |
 | `test_new_features.py` | 93 | Hash, CDC, schema, tMap, bigdata, templates |
 | `test_validation.py` | 20 | Schema / row / data validators |
 | `test_regression.py` | 17 | End-to-end & determinism |
-| **Total** | **392** | |
+| **Total** | **423** | |
 
 ## License
 
