@@ -1,5 +1,7 @@
 # Target Architecture in Microsoft Fabric
 
+> **Toolkit scope**: 200+ Talend components, 3 output translators (ADF JSON, Spark `.py`, Jupyter `.ipynb`), 7 SQL dialect translators, 7 Spark templates, 423 automated tests.
+
 ## High-Level Architecture
 
 ```
@@ -9,12 +11,12 @@
 │  ┌──────────────┐   ┌──────────────┐   ┌──────────────────────┐    │
 │  │  Data Factory │   │    Spark     │   │     Lakehouse        │    │
 │  │  (Pipelines)  │   │ (Notebooks)  │   │  ┌───────────────┐  │    │
-│  │               │   │              │   │  │  Bronze (Raw)  │  │    │
-│  │  Orchestrate  │──▶│  Transform   │──▶│  ├───────────────┤  │    │
-│  │  Schedule     │   │  Cleanse     │   │  │ Silver (Clean) │  │    │
-│  │  Monitor      │   │  Enrich      │   │  ├───────────────┤  │    │
-│  └──────────────┘   └──────────────┘   │  │  Gold (Curated)│  │    │
-│                                         │  └───────────────┘  │    │
+│  │               │   │  .py or      │   │  │  Bronze (Raw)  │  │    │
+│  │  Orchestrate  │──▶│  .ipynb      │──▶│  ├───────────────┤  │    │
+│  │  Schedule     │   │  Transform   │   │  │ Silver (Clean) │  │    │
+│  │  Monitor      │   │  Cleanse     │   │  ├───────────────┤  │    │
+│  └──────────────┘   │  Enrich      │   │  │  Gold (Curated)│  │    │
+│                      └──────────────┘   │  └───────────────┘  │    │
 │                                         └──────────────────────┘    │
 │                                                    │                │
 │                                         ┌──────────▼──────────┐    │
@@ -32,11 +34,49 @@
          ┌──────────────┴──────────────┐
          │        Data Sources          │
          │  ┌────────┐  ┌───────────┐  │
-         │  │PostgreSQL│  │  Files   │  │
-         │  │(from     │  │ (SFTP,  │  │
-         │  │ Oracle)  │  │  Blob)  │  │
-         │  └────────┘  └───────────┘  │
+         │  │Oracle   │  │  Files   │  │
+         │  │SQL Srvr │  │ (CSV,   │  │
+         │  │MySQL    │  │  Excel, │  │
+         │  │DB2      │  │  XML,   │  │
+         │  │Teradata │  │  JSON)  │  │
+         │  │Snowflake│  ├─────────┤  │
+         │  │Sybase   │  │ Cloud   │  │
+         │  │Postgres │  │ (S3,    │  │
+         │  └────────┘  │  Blob)  │  │
+         │               └─────────┘  │
          └─────────────────────────────┘
+```
+
+## Translation Pipeline Architecture
+
+```
+┌──────────────────┐     ┌─────────────────────┐     ┌────────────────────────┐
+│  Talend .item XML │────▶│  TalendJobParser     │────▶│  Inventory CSV          │
+│  + context files  │     │  11 categories       │     │  (scored & classified)  │
+└──────────────────┘     │  schema extraction   │     └───────┬────────────────┘
+                         │  tMap parsing         │             │
+                         │  bigdata detection    │     ┌───────▼────────────────┐
+                         └─────────────────────┘     │  Route by target        │
+                                                      └───┬───────┬───────┬────┘
+                                                          │       │       │
+                                              ┌───────────▼┐  ┌──▼─────┐  ┌▼──────────┐
+                                              │ADF Translator│  │ Spark  │  │ Notebook  │
+                                              │7 pipeline   │  │Translator│ │Translator │
+                                              │types        │  │7 templ. │  │.ipynb     │
+                                              └──────┬──────┘  └───┬────┘  └────┬──────┘
+                                                     │             │            │
+                                              ┌──────▼──────┐  ┌──▼─────┐  ┌───▼───────┐
+                                              │pl_*.json    │  │nb_*.py │  │nb_*.ipynb │
+                                              └─────────────┘  └────────┘  └───────────┘
+                                                                    │
+                                                          ┌─────────▼──────────┐
+                                                          │ SQL Translator      │
+                                                          │ 7 dialects → PG    │
+                                                          │ (Oracle, SQL Server,│
+                                                          │  MySQL, DB2,        │
+                                                          │  Teradata, Snowflake│
+                                                          │  Sybase)            │
+                                                          └────────────────────┘
 ```
 
 ## Medallion Architecture
@@ -68,10 +108,12 @@
 - **Used for**: Talend parent/orchestration jobs, simple copy jobs
 
 ### Spark Notebooks
-- **Complex Transformations**: Business logic, data quality, SCD
+- **Complex Transformations**: Business logic, data quality, SCD, CDC, merge/upsert
 - **Bronze → Silver**: Cleansing and standardization
 - **Silver → Gold**: Aggregation and business rules
-- **Used for**: Talend jobs with tMap, tAggregate, custom Java code
+- **Output formats**: `.py` scripts (for CI/CD) or `.ipynb` notebooks (for direct Fabric import)
+- **7 templates**: ETL, incremental load, lookup, SCD Type 1, SCD Type 2, CDC watermark, merge/upsert
+- **Used for**: Talend jobs with tMap, tAggregate, custom Java code, Hash lookups, Big Data, streaming
 
 ### Lakehouse
 - **Storage**: OneLake-backed Delta Lake storage
@@ -90,6 +132,20 @@
 | DEV | `ws-talend-migration-dev` | Development and testing |
 | UAT | `ws-talend-migration-uat` | User acceptance testing |
 | PROD | `ws-talend-migration-prod` | Production workloads |
+
+## SQL Translation Layer
+
+The toolkit includes a multi-dialect SQL translator that converts embedded SQL from **7 source databases** to PostgreSQL:
+
+| Source | Rules | Key Translations |
+|---|---|---|
+| Oracle | 33 | NVL→COALESCE, SYSDATE→CURRENT_TIMESTAMP, DECODE→CASE |
+| SQL Server | 38 | ISNULL→COALESCE, GETDATE→CURRENT_TIMESTAMP, TOP→LIMIT |
+| MySQL | 34 | IFNULL→COALESCE, NOW→CURRENT_TIMESTAMP, backtick removal |
+| DB2 | 27 | VALUE→COALESCE, CURRENT DATE→CURRENT_DATE, FETCH FIRST→LIMIT |
+| Teradata | 21 | SEL→SELECT, .DATE→CURRENT_DATE, QUALIFY→window function |
+| Snowflake | 23 | IFF→CASE, TRY_CAST→CAST, DATEADD→INTERVAL |
+| Sybase | 21 | ISNULL→COALESCE, GETDATE→CURRENT_TIMESTAMP, TOP→LIMIT |
 
 ## Security Model
 

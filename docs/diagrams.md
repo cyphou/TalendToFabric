@@ -10,11 +10,12 @@
 2. [Migration Workflow — Sequence Diagram](#2-migration-workflow--sequence-diagram)
 3. [Parser — Component Classification & Scoring](#3-parser--component-classification--scoring)
 4. [Translator — ADF Pipeline Types & Spark Templates](#4-translator--adf-pipeline-types--spark-templates)
-5. [SQL Translator — Oracle to PostgreSQL Rules](#5-sql-translator--oracle-to-postgresql-rules)
+5. [SQL Translator — Multi-Dialect to PostgreSQL Rules](#5-sql-translator--multi-dialect-to-postgresql-rules)
 6. [Fabric Target Architecture — Medallion Pattern](#6-fabric-target-architecture--medallion-pattern)
 7. [Talend → Fabric Component Mapping](#7-talend--fabric-component-mapping)
 8. [Test Suite Architecture](#8-test-suite-architecture)
 9. [Migration Phases — 6-Phase Timeline](#9-migration-phases--6-phase-timeline)
+10. [Notebook Translator Flow](#10-notebook-translator-flow)
 
 ---
 
@@ -37,13 +38,15 @@ flowchart LR
 
     subgraph TRANSLATOR["🔄 Translator"]
         ADF["ADFTranslator<br/>7 pipeline types"]
-        SPK["SparkTranslator<br/>4 notebook templates"]
-        SQL["OracleToPostgreSQLTranslator<br/>33 regex rules"]
+        SPK["SparkTranslator<br/>7 notebook templates"]
+        NBT["NotebookTranslator<br/>.ipynb output"]
+        SQL["MultiDialectSQLTranslator<br/>7 dialects → PostgreSQL"]
     end
 
     subgraph OUTPUT["📤 Output Files"]
         PL["pl_*.json<br/>ADF Pipelines"]
         NB["nb_*.py<br/>Spark Notebooks"]
+        IPYNB["nb_*.ipynb<br/>Jupyter Notebooks"]
         SQ["*.sql<br/>PostgreSQL Scripts"]
     end
 
@@ -66,15 +69,18 @@ flowchart LR
     TJP --> ME
     ME --> GI
     GI -->|target=DataFactory| ADF
-    GI -->|target=Spark| SPK
-    GI -->|has Oracle SQL| SQL
+    GI -->|target=Spark .py| SPK
+    GI -->|target=Spark .ipynb| NBT
+    GI -->|has embedded SQL| SQL
 
     ADF --> PL
     SPK --> NB
+    NBT --> IPYNB
     SQL --> SQ
 
     PL --> DF
     NB --> SK
+    IPYNB --> SK
     SQ --> LH
 
     DF --> LH
@@ -108,7 +114,8 @@ sequenceDiagram
     participant I as Inventory Generator
     participant ADF as ADF Translator
     participant SPK as Spark Translator
-    participant SQL as SQL Translator
+    participant NBT as Notebook Translator
+    participant SQL as SQL Translator<br/>(7 dialects)
     participant FAB as Microsoft Fabric
     participant V as Validators
 
@@ -129,15 +136,26 @@ sequenceDiagram
 
     loop Each Spark row
         U->>SPK: translate_job(row)
-        SPK->>SPK: Select template<br/>(ETL/Lookup/SCD/Incremental)
+        SPK->>SPK: Select template<br/>(ETL/Lookup/SCD1/SCD2/Incremental/CDC/Merge)
         SPK->>SPK: Convert Java expressions → PySpark
         SPK->>SPK: Generate source read code
         SPK-->>U: nb_job_name.py
     end
 
-    opt Embedded Oracle SQL
-        U->>SQL: translate(oracle_sql)
-        SQL->>SQL: Apply 33 regex rules
+    loop Each Notebook row
+        U->>NBT: translate_job(row)
+        NBT->>SPK: Generate .py content
+        NBT->>NBT: Split on COMMAND markers
+        NBT->>NBT: Comment blocks → Markdown cells
+        NBT->>NBT: Code blocks → Code cells
+        NBT->>NBT: Add Fabric kernel metadata
+        NBT-->>U: nb_job_name.ipynb
+    end
+
+    opt Embedded SQL (any dialect)
+        U->>SQL: translate(sql, dialect)
+        SQL->>SQL: Auto-detect or use specified dialect
+        SQL->>SQL: Apply dialect-specific rules (21–38 rules)
         SQL-->>U: postgresql_sql
     end
 
@@ -155,7 +173,7 @@ sequenceDiagram
 
 ## 3. Parser — Component Classification & Scoring
 
-How `TalendJobParser` classifies XML nodes into 10 categories and how `generate_inventory()` computes a complexity score.
+How `TalendJobParser` classifies XML nodes into 11 categories and how `generate_inventory()` computes a complexity score.
 
 ```mermaid
 flowchart TB
@@ -164,15 +182,16 @@ flowchart TB
         NODE --> CID["Extract componentName"]
     end
 
-    subgraph CLASSIFY["10-Category Classification"]
+    subgraph CLASSIFY["11-Category Classification"]
         CID --> INP["📥 input<br/>tOracle*Input, tPostgresql*Input,<br/>tFileInput*, tS3*Get..."]
         CID --> OUT["📤 output<br/>tOracle*Output, tPostgresql*Output,<br/>tFileOutput*, tS3*Put..."]
-        CID --> XFORM["🔄 transformation<br/>tMap, tJoin, tFilterRow,<br/>tAggregateRow, tNormalize..."]
+        CID --> XFORM["🔄 transformation<br/>tMap, tJoin, tFilterRow,<br/>tAggregateRow, tNormalize,<br/>tHashInput, tHashOutput..."]
         CID --> FCTL["📋 flow_control<br/>tRunJob, tParallelize,<br/>tPreJob, tPostJob, tLoop..."]
         CID --> ERRH["⚠️ error_handling<br/>tCatch, tLogCatcher,<br/>tStatCatcher, tAssert..."]
         CID --> CUST["💻 custom_code<br/>tJava, tJavaRow, tJavaFlex,<br/>tGroovy, tPythonRow..."]
         CID --> DBOP["🗄️ db_operation<br/>tOracleConnection, tDBCommit,<br/>tCreateTable, tDBSP..."]
         CID --> FUTIL["📁 file_utility<br/>tFileExist, tFileDelete,<br/>tFileCopy, tFTPGet..."]
+        CID --> BIGDATA["🐘 bigdata<br/>tSqoop*, tHive*, tPig*,<br/>tMapReduce*, tSpark*..."]
         CID --> UTIL["🔧 utility<br/>tLogRow, tSendMail,<br/>tSystem, tSleep..."]
         CID --> UNK["❓ unknown<br/>Unrecognized components<br/>flagged for manual review"]
     end
@@ -194,9 +213,10 @@ flowchart TB
         TOTAL -->|"score > 3.0"| COMPLEX["🔴 Complex<br/>→ Spark"]
         FCTL -->|"pattern=Orchestration"| DFFORCE["→ DataFactory (forced)"]
         CUST -->|"has custom code"| SKFORCE["→ Spark (forced)"]
+        BIGDATA -->|"has Big Data"| SKFORCE2["→ Spark (forced)"]
     end
 
-    INP & OUT & XFORM & FCTL & ERRH & CUST & DBOP & FUTIL & UTIL & UNK --> SCORE
+    INP & OUT & XFORM & FCTL & ERRH & CUST & DBOP & FUTIL & BIGDATA & UTIL & UNK --> SCORE
 
     style PARSE fill:#fff8e1,stroke:#f9a825
     style CLASSIFY fill:#e3f2fd,stroke:#1565c0
@@ -208,14 +228,15 @@ flowchart TB
 
 ## 4. Translator — ADF Pipeline Types & Spark Templates
 
-Decision tree showing how each inventory row is routed to one of 7 ADF pipeline types or 4 Spark notebook templates.
+Decision tree showing how each inventory row is routed to one of 7 ADF pipeline types, 7 Spark notebook templates, or Jupyter `.ipynb` output.
 
 ```mermaid
 flowchart TB
     INV["Inventory Row"] --> DEC{target_fabric?}
 
     DEC -->|DataFactory| ADF_DEC{"Migration pattern?"}
-    DEC -->|Spark| SPK_DEC{"Migration pattern?"}
+    DEC -->|"Spark (.py)"| SPK_DEC{"Migration pattern?"}
+    DEC -->|"Spark (.ipynb)"| NBT_DEC["NotebookTranslator"]
 
     subgraph ADF["ADF Pipeline Types"]
         ADF_DEC -->|"copy / simple ETL"| COPY["📋 Copy Pipeline<br/>CopyActivity + source/sink"]
@@ -227,91 +248,80 @@ flowchart TB
         ADF_DEC -->|"api_integration"| APIP["🌐 API Pipeline<br/>WebActivity + REST calls"]
     end
 
-    subgraph SPARK["Spark Notebook Templates"]
+    subgraph SPARK["Spark Notebook Templates — 7"]
         SPK_DEC -->|"standard ETL"| ETL["📓 etl_notebook<br/>read → transform → write"]
         SPK_DEC -->|"lookup / enrichment"| LOOK["🔍 lookup_pattern<br/>broadcast join + cache"]
-        SPK_DEC -->|"slowly changing dim"| SCD["📊 scd_type2<br/>merge + effective dates"]
+        SPK_DEC -->|"SCD Type 1"| SCD1["📊 scd_type1<br/>overwrite current values"]
+        SPK_DEC -->|"SCD Type 2"| SCD2["📊 scd_type2<br/>merge + effective dates"]
         SPK_DEC -->|"incremental load"| INCR["⏩ incremental_load<br/>watermark + delta merge"]
+        SPK_DEC -->|"CDC watermark"| CDC["🔄 cdc_watermark<br/>high-watermark CDC"]
+        SPK_DEC -->|"merge / upsert"| MERGE["🔀 merge_upsert<br/>INSERT/UPDATE/DELETE"]
+    end
+
+    subgraph NOTEBOOK["Jupyter Notebook Output"]
+        NBT_DEC --> SPK_GEN["SparkTranslator<br/>generates .py"]
+        SPK_GEN --> SPLIT["Split on COMMAND markers"]
+        SPLIT --> MD_CELL["Comment blocks → Markdown cells"]
+        SPLIT --> CODE_CELL["Code blocks → Code cells"]
+        MD_CELL & CODE_CELL --> IPYNB["nb_*.ipynb<br/>Fabric-ready notebook"]
     end
 
     subgraph COMMON["Shared Processing"]
         JAVA["Java → PySpark<br/>50 expression rules"]
         SRC["Source Code Generator<br/>14+ source types"]
-        SQLT["Oracle → PostgreSQL<br/>SQL Translator"]
+        SQLT["Multi-Dialect SQL<br/>Translator (7 dialects)"]
     end
 
-    ETL & LOOK & SCD & INCR --> JAVA
-    ETL & LOOK & SCD & INCR --> SRC
+    ETL & LOOK & SCD1 & SCD2 & INCR & CDC & MERGE --> JAVA
+    ETL & LOOK & SCD1 & SCD2 & INCR & CDC & MERGE --> SRC
     COPY & DFLOW & DDL --> SQLT
 
     style ADF fill:#e8eaf6,stroke:#283593
     style SPARK fill:#e0f2f1,stroke:#004d40
+    style NOTEBOOK fill:#fff8e1,stroke:#f9a825
     style COMMON fill:#fff3e0,stroke:#e65100
 ```
 
 ---
 
-## 5. SQL Translator — Oracle to PostgreSQL Rules
+## 5. SQL Translator — Multi-Dialect to PostgreSQL Rules
 
-The 33 regex-based translation rules organized by category.
+Translation rules for 7 source SQL dialects (197 total rules) organized by category.
 
 ```mermaid
 graph LR
-    subgraph ORACLE["Oracle SQL Input"]
-        O1["NVL(a, b)"]
-        O2["SYSDATE"]
-        O3["TO_DATE(s, fmt)"]
-        O4["TO_CHAR(d, fmt)"]
-        O5["DECODE(x, ...)"]
-        O6["NVL2(a, b, c)"]
-        O7["ROWNUM <= N"]
-        O8["(+) outer join"]
-        O9["SUBSTR(s,p,l)"]
-        O10["INSTR(s1,s2)"]
-        O11["LISTAGG(col,sep)"]
+    subgraph INPUT["SQL Input (7 Dialects)"]
+        OR["🔶 Oracle (33 rules)<br/>NVL, SYSDATE, DECODE,<br/>(+) join, ROWNUM..."]
+        SS["🔷 SQL Server (38 rules)<br/>ISNULL, GETDATE, TOP,<br/>DATEADD, DATEDIFF..."]
+        MY["🐬 MySQL (34 rules)<br/>IFNULL, NOW, LIMIT offset,<br/>backticks, AUTO_INCREMENT..."]
+        DB["📘 DB2 (27 rules)<br/>VALUE, CURRENT DATE,<br/>FETCH FIRST, CONCAT..."]
+        TD["🔴 Teradata (21 rules)<br/>SEL, .DATE, QUALIFY,<br/>SAMPLE, FORMAT..."]
+        SF["❄️ Snowflake (23 rules)<br/>IFF, TRY_CAST, DATEADD,<br/>$1 binding, FLATTEN..."]
+        SY["🟢 Sybase (21 rules)<br/>ISNULL, GETDATE, TOP,<br/>CONVERT, CHARINDEX..."]
     end
 
-    subgraph RULES["33 Regex Translation Rules"]
-        direction TB
-        R1["1️⃣ Function Mapping<br/>NVL→COALESCE, SYSDATE→CURRENT_TIMESTAMP"]
-        R2["2️⃣ Date Functions<br/>TO_DATE→TO_DATE, TO_CHAR→TO_CHAR"]
-        R3["3️⃣ String Functions<br/>SUBSTR→SUBSTRING, INSTR→POSITION"]
-        R4["4️⃣ Aggregation<br/>LISTAGG→STRING_AGG"]
-        R5["5️⃣ Decode→CASE WHEN"]
-        R6["6️⃣ Join Syntax<br/>(+) → remove, rewrite as ANSI JOIN"]
-        R7["7️⃣ ROWNUM → LIMIT / ROW_NUMBER()"]
-        R8["8️⃣ Data Types<br/>NUMBER→NUMERIC, VARCHAR2→VARCHAR"]
-        R9["9️⃣ Sequences<br/>seq.NEXTVAL→nextval(), seq.CURRVAL→currval()"]
+    subgraph ENGINE["Translation Engine"]
+        DET["Auto-detect dialect<br/>from connection type"]
+        BASE["BaseSQLTranslator<br/>(shared logic)"]
+        RULES["Dialect-specific<br/>regex rules"]
+        DET --> BASE --> RULES
     end
 
     subgraph PG["PostgreSQL Output"]
         P1["COALESCE(a, b)"]
         P2["CURRENT_TIMESTAMP"]
-        P3["TO_DATE(s, fmt)"]
-        P4["TO_CHAR(d, fmt)"]
-        P5["CASE WHEN x=v THEN ..."]
-        P6["CASE WHEN a IS NOT NULL<br/>THEN b ELSE c END"]
-        P7["LIMIT N"]
-        P8["Rewritten as ANSI JOIN"]
-        P9["SUBSTRING(s FROM p FOR l)"]
-        P10["POSITION(s2 IN s1)"]
-        P11["STRING_AGG(col, sep)"]
+        P3["CASE WHEN ..."]
+        P4["LIMIT N"]
+        P5["SUBSTRING / POSITION"]
+        P6["STRING_AGG"]
+        P7["Standard ANSI JOIN"]
     end
 
-    O1 --> R1 --> P1
-    O2 --> R1 --> P2
-    O3 --> R2 --> P3
-    O4 --> R2 --> P4
-    O5 --> R5 --> P5
-    O6 --> R1 --> P6
-    O7 --> R7 --> P7
-    O8 --> R6 --> P8
-    O9 --> R3 --> P9
-    O10 --> R3 --> P10
-    O11 --> R4 --> P11
+    OR & SS & MY & DB & TD & SF & SY --> DET
+    RULES --> P1 & P2 & P3 & P4 & P5 & P6 & P7
 
-    style ORACLE fill:#fff3e0,stroke:#ff9800
-    style RULES fill:#e3f2fd,stroke:#1976d2
+    style INPUT fill:#fff3e0,stroke:#ff9800
+    style ENGINE fill:#e3f2fd,stroke:#1976d2
     style PG fill:#e8f5e9,stroke:#388e3c
 ```
 
@@ -389,7 +399,7 @@ Visual mapping of the most common Talend components to their Microsoft Fabric eq
 
 ```mermaid
 graph TB
-    subgraph TALEND["Talend Components — 140+"]
+    subgraph TALEND["Talend Components — 200+"]
         direction LR
         subgraph DB["Databases"]
             tOI["tOracleInput"]
@@ -488,19 +498,19 @@ graph TB
 
 ## 8. Test Suite Architecture
 
-Overview of the 197-test suite: 7 test files, 6 XML fixtures, and coverage across all modules.
+Overview of the 423-test suite: 9 test files, 7 XML fixtures, and coverage across all modules.
 
 ```mermaid
 graph TB
-    subgraph SUITE["Test Suite — 197 Tests"]
+    subgraph SUITE["Test Suite — 423 Tests"]
         direction TB
 
         subgraph TP["test_parser.py — 57 tests"]
             TP1["XML parsing & component extraction"]
-            TP2["10-category classification"]
-            TP3["Connection & context params"]
+            TP2["11-category classification"]
+            TP3["Connection, context params, schemas"]
             TP4["Comment node handling"]
-            TP5["Metadata & inventory generation"]
+            TP5["Metadata, tMap & inventory generation"]
         end
 
         subgraph TA["test_translate_to_adf.py — 34 tests"]
@@ -511,10 +521,17 @@ graph TB
         end
 
         subgraph TS["test_translate_to_spark.py — 43 tests"]
-            TS1["4 notebook templates"]
+            TS1["7 notebook templates"]
             TS2["Java→PySpark expression rules"]
             TS3["15 source type code gen"]
             TS4["Custom code preservation"]
+        end
+
+        subgraph TNB["test_translate_to_notebook.py — 34 tests"]
+            TNB1[".ipynb JSON structure"]
+            TNB2["Markdown & code cell splitting"]
+            TNB3["Fabric kernel metadata"]
+            TNB4["Round-trip validation"]
         end
 
         subgraph TQ["test_sql_translator.py — 26 tests"]
@@ -523,6 +540,24 @@ graph TB
             TQ3["ROWNUM → LIMIT / ROW_NUMBER()"]
             TQ4["Data types & sequences"]
             TQ5["Complex nested expressions"]
+        end
+
+        subgraph TD["test_sql_dialects.py — 102 tests"]
+            TD1["SQL Server — 38 rules"]
+            TD2["MySQL — 34 rules"]
+            TD3["DB2 — 27 rules"]
+            TD4["Teradata — 21 rules"]
+            TD5["Snowflake — 23 rules"]
+            TD6["Sybase — 21 rules"]
+        end
+
+        subgraph TNF["test_new_features.py — 93 tests"]
+            TNF1["Hash lookups (tHashInput/Output)"]
+            TNF2["CDC components & patterns"]
+            TNF3["Schema extraction"]
+            TNF4["tMap expression parsing"]
+            TNF5["BigData classification"]
+            TNF6["New Spark templates"]
         end
 
         subgraph TV["test_validation.py — 20 tests"]
@@ -541,19 +576,23 @@ graph TB
         end
     end
 
-    subgraph FIX["fixtures/ — 6 Talend .item files"]
+    subgraph FIX["fixtures/ — 7 Talend .item files"]
         F1["simple_copy_job.item"]
         F2["transform_job.item"]
         F3["orchestration_job.item"]
         F4["custom_code_job.item"]
         F5["complex_etl_job.item"]
         F6["file_transfer_job.item"]
+        F7["cdc_hash_job.item"]
     end
 
     FIX --> TP
     FIX --> TA
     FIX --> TS
+    FIX --> TNB
     FIX --> TQ
+    FIX --> TD
+    FIX --> TNF
     FIX --> TV
     FIX --> TR
 
@@ -562,9 +601,12 @@ graph TB
     style TP fill:#fff8e1,stroke:#f9a825
     style TA fill:#e8f5e9,stroke:#2e7d32
     style TS fill:#e3f2fd,stroke:#1565c0
+    style TNB fill:#fff9c4,stroke:#f57f17
     style TQ fill:#fce4ec,stroke:#c62828
+    style TD fill:#e8eaf6,stroke:#283593
+    style TNF fill:#f1f8e9,stroke:#558b2f
     style TV fill:#fff3e0,stroke:#ef6c00
-    style TR fill:#f1f8e9,stroke:#558b2f
+    style TR fill:#eceff1,stroke:#546e7a
 ```
 
 ---
@@ -587,7 +629,8 @@ gantt
     section Phase 2 - Translation
     ADF pipeline generation         :p2a, after p1c, 10d
     Spark notebook generation       :p2b, after p1c, 10d
-    SQL translation Oracle→PG       :p2c, after p1c, 7d
+    SQL translation (7 dialects)    :p2c, after p1c, 7d
+    Jupyter notebook generation     :p2d, after p2b, 3d
 
     section Phase 3 - Deployment
     DEV environment setup           :p3a, after p2a, 5d
@@ -622,3 +665,44 @@ gantt
 | **VS Code** | Install [Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid) |
 | **Confluence** | Use the Mermaid plugin or export as PNG/SVG |
 | **Export to PNG** | Use `mmdc` CLI: `npx @mermaid-js/mermaid-cli -i diagrams.md -o output/` |
+
+---
+
+## 10. Notebook Translator Flow
+
+How the `NotebookTranslator` converts Spark `.py` output into Fabric-ready Jupyter `.ipynb` notebooks.
+
+```mermaid
+flowchart LR
+    subgraph INPUT["Input"]
+        INV["Inventory CSV<br/>(Spark-targeted rows)"]
+    end
+
+    subgraph SPARK_GEN["SparkTranslator"]
+        ST["translate_job(row)"]
+        ST --> PY["Generated .py content<br/>with # COMMAND ----------<br/>markers"]
+    end
+
+    subgraph SPLIT["Cell Splitting"]
+        PY --> SEP["Split on<br/># COMMAND ----------"]
+        SEP --> CHK{"Block type?"}
+        CHK -->|"All lines start with #"| MD["📝 Markdown Cell<br/>Strip # prefix"]
+        CHK -->|"Has code lines"| CODE["💻 Code Cell<br/>Keep as-is"]
+    end
+
+    subgraph NOTEBOOK["Jupyter Notebook"]
+        direction TB
+        META["Metadata<br/>kernel: synapse_pyspark<br/>language: python<br/>nbformat: 4.2"]
+        CELLS["Cells array<br/>Markdown + Code cells"]
+        META --> JSON["nb_*.ipynb"]
+        CELLS --> JSON
+    end
+
+    INV --> ST
+    MD & CODE --> CELLS
+
+    style INPUT fill:#fff3e0,stroke:#e65100
+    style SPARK_GEN fill:#e3f2fd,stroke:#1565c0
+    style SPLIT fill:#f3e5f5,stroke:#7b1fa2
+    style NOTEBOOK fill:#e8f5e9,stroke:#2e7d32
+```
